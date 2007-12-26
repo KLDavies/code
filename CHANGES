@@ -3,6 +3,7 @@ Version 1.2 - RBF Date
 
 - Improved cleanup routine when in verbose mode to avoid leftovers on the screen RBF - Copy code from new md5deep?
 - Added CSV output mode
+- Added -t mode for threshold computation
 
 Version 1.1 - 14 Aug 2006
 

@@ -52,7 +52,7 @@ int match_compare(state *s, char *fn, char *sum)
     }
 
     score = spamsum_match(s,sum,tmp->hash);
-    if (score > 0)
+    if (score > s->threshold)
     {
       if (s->mode & mode_csv)
 	printf ("%s,%s,%"PRIu32"%s", fn, tmp->fn,score,NEWLINE);

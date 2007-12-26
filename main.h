@@ -63,6 +63,8 @@ typedef struct {
   // These are used when computing where matched files are different
   uint32_t  block_size;
 
+  uint8_t  threshold;
+
 } state;
 
 
@@ -115,6 +117,7 @@ char *__progname;
 #define mode_match_pretty 1<<6
 #define mode_verbose      1<<7
 #define mode_csv          1<<8
+#define mode_threshold    1<<9
 
 #define MODE(A)   (s->mode & A)
 #define BLANK_LINE   \

@@ -30,6 +30,8 @@ static int initialize_state(state *s)
   s->first_file_processed = TRUE;
   s->mode                 = mode_none;
 
+  s->threshold = 0;
+
   return FALSE;
 }
 
@@ -38,7 +40,7 @@ static void usage(void)
 {
   printf ("%s version %s by Jesse Kornblum%s", __progname, VERSION, NEWLINE);
   printf ("Copyright (C) 2006 ManTech CFIA%s", NEWLINE);
-  printf ("Usage: %s [-V|h] [-m file] [-vprdsblc] [FILES]%s%s", 
+  printf ("Usage: %s [-V|h] [-m file] [-vprdsblc] [-t val] [FILES]%s%s", 
 	  __progname, NEWLINE, NEWLINE);
 
   printf ("-v - Verbose mode.%s", NEWLINE);
@@ -49,6 +51,7 @@ static void usage(void)
   printf ("-b - Uses only the bare name of files; all path information omitted%s", NEWLINE);
   printf ("-l - Uses relative paths for filenames%s", NEWLINE);
   printf ("-c - Prints output in CSV format%s", NEWLINE);
+  printf ("-t - Only displays matches above the given threshold%s", NEWLINE);
   printf ("-m - Match FILES against known hashes in file%s", NEWLINE);
   printf ("-h - Display this help message%s", NEWLINE);
   printf ("-V - Display version number and exit%s", NEWLINE);
@@ -78,7 +81,7 @@ static void sanity_check(state *s, int condition, char *msg)
 static void process_cmd_line(state *s, int argc, char **argv)
 {
   int i, match_files_loaded = FALSE;
-  while ((i=getopt(argc,argv,"vhVpdsblcrm:")) != -1) {
+  while ((i=getopt(argc,argv,"vhVpdsblct:rm:")) != -1) {
     switch(i) {
 
     case 'v': 
@@ -113,6 +116,13 @@ static void process_cmd_line(state *s, int argc, char **argv)
 
     case 'r':
       s->mode |= mode_recursive; break;
+
+    case 't':
+      s->threshold = (uint8_t)atol(optarg);
+      if (s->threshold > 100)
+	fatal_error(s,__progname,"Illegal threshold");
+      s->mode |= mode_threshold;
+      break;
       
     case 'm':
       s->mode |= mode_match;
