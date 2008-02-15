@@ -1,6 +1,8 @@
 
 /* ssdeep
-   (C) Copyright 2006 ManTech CFIA.
+   (C) Copyright 2006 ManTech International Corporation.
+
+   $Id$
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,6 +22,10 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,7 +33,10 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <inttypes.h>
+
+#ifdef HAVE_INTTYPES_H
+# include <inttypes.h>
+#endif
 
 #ifdef __LINUX
 // These are used to find file sizes of block devices. See helpers.c

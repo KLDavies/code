@@ -1,3 +1,9 @@
+2008-02-15 Jesse Kornblum <research@jessekornblum.com>
+
+	* Changing Win32 build to create DLL. All other
+	  versions should have library/header files installed
+	
+
 2008-02-14 Jesse Kornblum <research@jessekornblum.com>
 
 	* Moved to autotools structure

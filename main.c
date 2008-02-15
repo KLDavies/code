@@ -1,6 +1,8 @@
 
 /* ssdeep
-   (C) Copyright 2006 ManTech CFIA.
+   (C) Copyright 2006 ManTech International Corporation
+
+   $Id$
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -39,7 +41,7 @@ static int initialize_state(state *s)
 static void usage(void)
 {
   printf ("%s version %s by Jesse Kornblum%s", __progname, VERSION, NEWLINE);
-  printf ("Copyright (C) 2006 ManTech CFIA%s", NEWLINE);
+  printf ("Copyright (C) 2006 ManTech International Corporation%s", NEWLINE);
   printf ("Usage: %s [-V|h] [-m file] [-vprdsblc] [-t val] [FILES]%s%s", 
 	  __progname, NEWLINE, NEWLINE);
 
