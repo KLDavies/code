@@ -12,9 +12,9 @@ include_HEADERS=ssdeep.h
 
 man_MANS=ssdeep.1
 
-ssdeep_SOURCES = cycles.c  dig.c  \
-                 helpers.c  main.c  match.c \
-                 main.h ssdeep.h tchar-local.h
+ssdeep_SOURCES = main.c match.c engine.c       \
+                 dig.c cycles.c helpers.c      \
+                 main.h fuzzy.h tchar-local.h
 
 EXTRA_DIST=config.guess config.sub
 
