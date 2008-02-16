@@ -424,7 +424,7 @@ static unsigned score_strings(const char *s1, const char *s2, uint32_t block_siz
 /*
   given two spamsum strings return a value indicating the degree to which they match.
 */
-uint32_t spamsum_match(state *s, const char *str1, const char *str2)
+int fuzzy_compare(const char *str1, const char *str2)
 {
   uint32_t block_size1, block_size2;
   uint32_t score = 0;
@@ -504,7 +504,7 @@ uint32_t spamsum_match(state *s, const char *str1, const char *str2)
   free(s1);
   free(s2);
   
-  return score;
+  return (int)score;
 }
 
 

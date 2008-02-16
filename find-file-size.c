@@ -8,9 +8,8 @@
 
 #include "main.h"
 
+
 #ifndef _WIN32
-
-
 
 /* Return the size, in bytes of an open file stream. On error, return 0 */
 #if defined (__LINUX__)

@@ -2,9 +2,7 @@
 /* Fuzzy Hashing by Jesse Kornblum
    Copyright (C) ManTech International Corporation 2008
 
-   $Id$ 
-
-*/
+   $Id$ */
 
 
 /* Compute the fuzzy hash of buf. The resulting block size is stored in 
@@ -25,7 +23,7 @@ extern int fuzzy_hash_file(FILE          *handle,
 /* Returns a value from 0 to 100 indicating the match score of the 
    two signatures. A match score of zero indicates the sigantures
    did not match. */
-extern int fuzzy_compare(char *sig1, char *sig2);
+extern int fuzzy_compare(const char *sig1, const char *sig2);
 
 
 /* -----------------------------------------------------------------

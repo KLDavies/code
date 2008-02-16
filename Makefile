@@ -61,7 +61,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libssdeep_la_LIBADD =
-am_libssdeep_la_OBJECTS = fuzzy.lo edit_dist.lo
+am_libssdeep_la_OBJECTS = fuzzy.lo edit_dist.lo find-file-size.lo
 libssdeep_la_OBJECTS = $(am_libssdeep_la_OBJECTS)
 libssdeep_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -128,7 +128,6 @@ CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
 DLLTOOL = dlltool
-DSYMUTIL = @DSYMUTIL@
 ECHO = echo
 ECHO_C = 
 ECHO_N = -n
@@ -151,7 +150,6 @@ LN_S = ln -s
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run makeinfo
 MKDIR_P = ./install-sh -c -d
-NMEDIT = @NMEDIT@
 OBJDUMP = objdump
 OBJEXT = o
 PACKAGE = ssdeep
@@ -162,7 +160,6 @@ PACKAGE_TARNAME = ssdeep
 PACKAGE_VERSION = 1.2
 PATH_SEPARATOR = :
 RANLIB = ranlib
-SED = @SED@
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = strip
@@ -221,7 +218,7 @@ top_srcdir = .
 ssdeep_LDADD = libssdeep.la
 ssdeep_LDFLAGS = -static
 lib_LTLIBRARIES = libssdeep.la
-libssdeep_la_SOURCES = fuzzy.c edit_dist.c
+libssdeep_la_SOURCES = fuzzy.c edit_dist.c find-file-size.c
 libssdeep_la_LDFLAGS = -no-undefined -version-info 0:0:0
 include_HEADERS = ssdeep.h
 man_MANS = ssdeep.1
@@ -356,6 +353,7 @@ include ./$(DEPDIR)/cycles.Po
 include ./$(DEPDIR)/dig.Po
 include ./$(DEPDIR)/edit_dist.Plo
 include ./$(DEPDIR)/engine.Po
+include ./$(DEPDIR)/find-file-size.Plo
 include ./$(DEPDIR)/fuzzy.Plo
 include ./$(DEPDIR)/helpers.Po
 include ./$(DEPDIR)/main.Po
