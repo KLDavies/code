@@ -5,7 +5,7 @@ ssdeep_LDADD=libssdeep.la
 ssdeep_LDFLAGS=-static
 
 lib_LTLIBRARIES=libssdeep.la
-libssdeep_la_SOURCES=fuzzy.c edit_dist.c helpers.c
+libssdeep_la_SOURCES=fuzzy.c edit_dist.c find-file-size.c
 libssdeep_la_LDFLAGS=-no-undefined -version-info 0:0:0
 
 include_HEADERS=ssdeep.h
