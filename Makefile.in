@@ -39,7 +39,7 @@ subdir = .
 DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS config.guess config.sub depcomp \
+	ChangeLog INSTALL NEWS TODO config.guess config.sub depcomp \
 	install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -61,15 +61,15 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libssdeep_la_LIBADD =
-am_libssdeep_la_OBJECTS = engine.lo
+am_libssdeep_la_OBJECTS = fuzzy.lo edit_dist.lo
 libssdeep_la_OBJECTS = $(am_libssdeep_la_OBJECTS)
 libssdeep_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libssdeep_la_LDFLAGS) $(LDFLAGS) -o $@
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_ssdeep_OBJECTS = cycles.$(OBJEXT) dig.$(OBJEXT) edit_dist.$(OBJEXT) \
-	helpers.$(OBJEXT) main.$(OBJEXT) match.$(OBJEXT)
+am_ssdeep_OBJECTS = cycles.$(OBJEXT) dig.$(OBJEXT) helpers.$(OBJEXT) \
+	main.$(OBJEXT) match.$(OBJEXT)
 ssdeep_OBJECTS = $(am_ssdeep_OBJECTS)
 ssdeep_DEPENDENCIES = libssdeep.la
 ssdeep_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -218,13 +218,13 @@ top_srcdir = @top_srcdir@
 ssdeep_LDADD = libssdeep.la
 ssdeep_LDFLAGS = -static
 lib_LTLIBRARIES = libssdeep.la
-libssdeep_la_SOURCES = engine.c
+libssdeep_la_SOURCES = fuzzy.c edit_dist.c
 libssdeep_la_LDFLAGS = -no-undefined -version-info 0:0:0
 include_HEADERS = ssdeep.h
 man_MANS = ssdeep.1
-ssdeep_SOURCES = cycles.c  dig.c  edit_dist.c  \
+ssdeep_SOURCES = cycles.c  dig.c  \
                  helpers.c  main.c  match.c \
-                 main.h ssdeep.h
+                 main.h ssdeep.h tchar-local.h
 
 EXTRA_DIST = config.guess config.sub
 all: config.h
@@ -351,8 +351,8 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cycles.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dig.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/edit_dist.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/engine.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/edit_dist.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fuzzy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/helpers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/match.Po@am__quote@

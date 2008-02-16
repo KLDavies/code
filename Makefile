@@ -32,14 +32,14 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = powerpc-apple-darwin8.11.0
-host_triplet = powerpc-apple-darwin8.11.0
+build_triplet = i386-pc-solaris2.11
+host_triplet = i386-pc-solaris2.11
 bin_PROGRAMS = ssdeep$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure AUTHORS COPYING \
-	ChangeLog INSTALL NEWS config.guess config.sub depcomp \
+	ChangeLog INSTALL NEWS TODO config.guess config.sub depcomp \
 	install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -61,15 +61,15 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libssdeep_la_LIBADD =
-am_libssdeep_la_OBJECTS = engine.lo
+am_libssdeep_la_OBJECTS = fuzzy.lo edit_dist.lo
 libssdeep_la_OBJECTS = $(am_libssdeep_la_OBJECTS)
 libssdeep_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libssdeep_la_LDFLAGS) $(LDFLAGS) -o $@
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_ssdeep_OBJECTS = cycles.$(OBJEXT) dig.$(OBJEXT) edit_dist.$(OBJEXT) \
-	helpers.$(OBJEXT) main.$(OBJEXT) match.$(OBJEXT)
+am_ssdeep_OBJECTS = cycles.$(OBJEXT) dig.$(OBJEXT) helpers.$(OBJEXT) \
+	main.$(OBJEXT) match.$(OBJEXT)
 ssdeep_OBJECTS = $(am_ssdeep_OBJECTS)
 ssdeep_DEPENDENCIES = libssdeep.la
 ssdeep_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -107,19 +107,19 @@ DIST_ARCHIVES = $(distdir).tar.gz
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run aclocal-1.10
-AMTAR = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run tar
+ACLOCAL = ${SHELL} /export/home/jessek/ssdeep/missing --run aclocal-1.10
+AMTAR = ${SHELL} /export/home/jessek/ssdeep/missing --run tar
 AR = ar
 AS = as
-AUTOCONF = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run autoconf
-AUTOHEADER = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run autoheader
-AUTOMAKE = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run automake-1.10
-AWK = awk
+AUTOCONF = ${SHELL} /export/home/jessek/ssdeep/missing --run autoconf
+AUTOHEADER = ${SHELL} /export/home/jessek/ssdeep/missing --run autoheader
+AUTOMAKE = ${SHELL} /export/home/jessek/ssdeep/missing --run automake-1.10
+AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
 CPP = gcc -E
-CPPFLAGS = -I/usr/local/include 
+CPPFLAGS = 
 CXX = g++
 CXXCPP = g++ -E
 CXXDEPMODE = depmode=gcc3
@@ -132,24 +132,24 @@ ECHO = echo
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
-EGREP = /usr/bin/grep -E
+EGREP = /usr/bin/ggrep -E
 EXEEXT = 
-F77 = 
-FFLAGS = 
-GREP = /usr/bin/grep
-INSTALL = /usr/bin/install -c
+F77 = f77
+FFLAGS = -g
+GREP = /usr/bin/ggrep
+INSTALL = /opt/sfw/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-LDFLAGS = -L/usr/local/lib 
+LDFLAGS = 
 LIBOBJS = 
 LIBS = 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run makeinfo
-MKDIR_P = ./install-sh -c -d
+MAKEINFO = ${SHELL} /export/home/jessek/ssdeep/missing --run makeinfo
+MKDIR_P = /opt/sfw/bin/mkdir -p
 OBJDUMP = objdump
 OBJEXT = o
 PACKAGE = ssdeep
@@ -161,48 +161,48 @@ PACKAGE_VERSION = 1.2
 PATH_SEPARATOR = :
 RANLIB = ranlib
 SET_MAKE = 
-SHELL = /bin/sh
+SHELL = /bin/bash
 STRIP = strip
 VERSION = 1.2
-abs_builddir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
-abs_srcdir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
-abs_top_builddir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
-abs_top_srcdir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
+abs_builddir = /export/home/jessek/ssdeep
+abs_srcdir = /export/home/jessek/ssdeep
+abs_top_builddir = /export/home/jessek/ssdeep
+abs_top_srcdir = /export/home/jessek/ssdeep
 ac_ct_CC = gcc
 ac_ct_CXX = g++
-ac_ct_F77 = 
+ac_ct_F77 = f77
 am__include = include
 am__leading_dot = .
 am__quote = 
 am__tar = ${AMTAR} chof - "$$tardir"
 am__untar = ${AMTAR} xf -
 bindir = ${exec_prefix}/bin
-build = powerpc-apple-darwin8.11.0
+build = i386-pc-solaris2.11
 build_alias = 
-build_cpu = powerpc
-build_os = darwin8.11.0
-build_vendor = apple
+build_cpu = i386
+build_os = solaris2.11
+build_vendor = pc
 builddir = .
 datadir = ${datarootdir}
 datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
-host = powerpc-apple-darwin8.11.0
+host = i386-pc-solaris2.11
 host_alias = 
-host_cpu = powerpc
-host_os = darwin8.11.0
-host_vendor = apple
+host_cpu = i386
+host_os = solaris2.11
+host_vendor = pc
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = $(SHELL) /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/install-sh
+install_sh = $(SHELL) /export/home/jessek/ssdeep/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = $(top_builddir)/./install-sh -c -d
+mkdir_p = /opt/sfw/bin/mkdir -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
 prefix = /usr/local
@@ -218,13 +218,13 @@ top_srcdir = .
 ssdeep_LDADD = libssdeep.la
 ssdeep_LDFLAGS = -static
 lib_LTLIBRARIES = libssdeep.la
-libssdeep_la_SOURCES = engine.c
+libssdeep_la_SOURCES = fuzzy.c edit_dist.c
 libssdeep_la_LDFLAGS = -no-undefined -version-info 0:0:0
 include_HEADERS = ssdeep.h
 man_MANS = ssdeep.1
-ssdeep_SOURCES = cycles.c  dig.c  edit_dist.c  \
+ssdeep_SOURCES = cycles.c  dig.c  \
                  helpers.c  main.c  match.c \
-                 main.h ssdeep.h
+                 main.h ssdeep.h tchar-local.h
 
 EXTRA_DIST = config.guess config.sub
 all: config.h
@@ -351,8 +351,8 @@ distclean-compile:
 
 include ./$(DEPDIR)/cycles.Po
 include ./$(DEPDIR)/dig.Po
-include ./$(DEPDIR)/edit_dist.Po
-include ./$(DEPDIR)/engine.Plo
+include ./$(DEPDIR)/edit_dist.Plo
+include ./$(DEPDIR)/fuzzy.Plo
 include ./$(DEPDIR)/helpers.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/match.Po
