@@ -90,7 +90,6 @@ memset(VAR,0,SIZE * sizeof(TYPE));
 #define file_symlink    7
 #define file_unknown  254
 
-
 typedef struct _lsh_node {
   char    *hash;
   TCHAR   *fn;
@@ -98,23 +97,17 @@ typedef struct _lsh_node {
 } lsh_node;
 
 typedef struct {
-  lsh_node         *top, *bottom;
+  lsh_node  *top, *bottom;
 } lsh_list;
+
 
 typedef struct {
   int       first_file_processed;
   uint64_t  mode;
   lsh_list  *known_hashes;
-
-  // These are used when computing where matched files are different
-  //  uint32_t  block_size;
-
-  uint8_t  threshold;
-
-  int     argc;
-  TCHAR   **argv;
-
-
+  uint8_t   threshold;
+  int       argc;
+  TCHAR     **argv;
 } state;
 
 
@@ -166,12 +159,8 @@ int getopt(int argc, char *const argv[], const char *optstring);
 #define mode_csv          1<<8
 #define mode_threshold    1<<9
 
-
-
-
-
-
 #define MODE(A)   (s->mode & A)
+
 #define BLANK_LINE   \
 "                                                                               "
 
@@ -186,13 +175,11 @@ int have_processed_dir(TCHAR *fn);
 
 int process(state *s, TCHAR *fn);
 
+
 // *********************************************************************
-// Engine functions
+// Fuzzy Hashing Engine
 // *********************************************************************
 int hash_file(state *s, TCHAR *fn);
-
-// Returns a score from 0-100 about how well the two sums match
-//uint32_t spamsum_match(state *s, const char *str1, const char *str2);
 
 
 
@@ -216,7 +203,7 @@ int my_dirname(TCHAR *s);
 void chop_line(TCHAR *s);
 
 int find_comma_separated_string(TCHAR *s, unsigned int n);
-void shift_string(char *fn, unsigned int start, unsigned int new_start);
+void shift_string(TCHAR *fn, unsigned int start, unsigned int new_start);
 void prepare_filename(state *s, TCHAR *fn);
 
 /* Returns the size of the given file, in bytes. */
@@ -238,8 +225,6 @@ void display_filename(FILE *out, TCHAR *fn);
 // *********************************************************************
 // Matching functions
 // *********************************************************************
-int lsh_list_init(lsh_list *l);
-
 
 // See if the existing file and hash are in the set of known hashes
 int match_compare(state *s, TCHAR *fn, char *sum);

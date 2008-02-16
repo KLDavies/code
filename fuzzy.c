@@ -129,7 +129,8 @@ static int ss_init(ss_context *ctx, FILE *handle)
   if (ctx->ret == NULL)
     return TRUE;
 
-  ctx->total_chars = find_file_size(handle);
+  if (handle != NULL)
+    ctx->total_chars = find_file_size(handle);
 
   ctx->block_size = MIN_BLOCKSIZE;
   while (ctx->block_size * SPAMSUM_LENGTH < ctx->total_chars) {
@@ -232,7 +233,6 @@ static int ss_update(ss_context *ctx, FILE *handle)
 
 
 int fuzzy_hash_file(FILE *handle,
-		    uint32_t *block_size,
 		    char *result)
 {
   uint64_t filepos = ftello(handle);
@@ -266,6 +266,59 @@ int fuzzy_hash_file(FILE *handle,
 
   ss_destroy(ctx);
 
+  free(ctx);
+  return FALSE;
+}
+
+
+int fuzzy_hash_buf(unsigned char *buf,
+		   uint32_t      buf_len,
+		   char          *result)
+{
+  int done = FALSE;
+  ss_context *ctx  = (ss_context *)malloc(sizeof(ss_context));
+  
+  if (ctx == NULL)
+    return TRUE;
+
+  ctx->total_chars = buf_len;
+  ss_init(ctx, NULL);
+
+
+  while (!done)
+  {
+    snprintf(ctx->ret, 12, "%u:", ctx->block_size);
+    ctx->p = ctx->ret + strlen(ctx->ret);
+    
+    memset(ctx->p, 0, SPAMSUM_LENGTH+1);
+    memset(ctx->ret2, 0, sizeof(ctx->ret2));
+    
+    ctx->k  = ctx->j  = 0;
+    ctx->h3 = ctx->h2 = HASH_INIT;
+    ctx->h  = roll_reset();
+
+    ss_engine(ctx,buf,buf_len);
+
+    /* our blocksize guess may have been way off - repeat if necessary */
+    if (ctx->block_size > MIN_BLOCKSIZE && ctx->j < SPAMSUM_LENGTH/2) 
+      ctx->block_size = ctx->block_size / 2;
+    else
+      done = TRUE;
+
+    if (ctx->h != 0) 
+      {
+	ctx->p[ctx->j] = b64[ctx->h2 % 64];
+	ctx->ret2[ctx->k] = b64[ctx->h3 % 64];
+      }
+    
+    strcat(ctx->p+ctx->j, ":");
+    strcat(ctx->p+ctx->j, ctx->ret2);
+  }
+
+
+  strncpy(result,ctx->ret,FUZZY_MAX_RESULT);
+
+  ss_destroy(ctx);
   free(ctx);
   return FALSE;
 }

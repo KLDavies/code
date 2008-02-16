@@ -23,8 +23,11 @@
 #include "ssdeep.h"
 
 
-// The longest line we should encounter when reading files of known hashes
+/* The longest line we should encounter when reading files of known hashes */
 #define MAX_STR_LEN  2048
+
+
+
 
 int lsh_list_init(lsh_list *l)
 {
@@ -182,7 +185,14 @@ int match_load(state *s, char *fn)
     find_comma_separated_string(str,0);
     find_comma_separated_string(known_file_name,1);
 
-      //    if (lsh_list_insert(s,s->known_hashes,known_file_name,str))
+    /* RBF - We may want to make this code a separate function */
+    size_t i, sz = _tcslen(str);
+    for (i = 0 ; i < sz ; i++)
+      {
+	known_hash[i] = (unsigned char)(str[i] & 0xff);
+      }
+    known_hash[i] = 0;
+    
     if (match_add(s,known_file_name,known_hash))
     {
       // If we can't insert this value, we're probably out of memory.

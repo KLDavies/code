@@ -11,12 +11,11 @@
    characters. It is the user's responsibility to append the filename,
    if any, to result after computation. */
 extern int fuzzy_hash_buf(unsigned char *buf,
-			  uint32_t      *block_size, 
+			  uint32_t      buf_len,
 			  char          *result);
 
 /* Works like the above, but hashes a file instead of a buffer. */
 extern int fuzzy_hash_file(FILE          *handle,
-			   uint32_t      *block_size, 
 			   char          *result);
 
 

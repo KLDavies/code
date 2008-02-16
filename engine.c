@@ -3,10 +3,7 @@
 
 #include "main.h"
 
-
-
-
-
+#define MAX_STATUS_MSG   78
 
 int hash_file(state *s, TCHAR *fn)
 {
@@ -29,8 +26,7 @@ int hash_file(state *s, TCHAR *fn)
     return TRUE;
   }
 
-  /* RBF - Move '80' into some kind of define */
-  if ((msg = (TCHAR *)malloc(sizeof(TCHAR) * 80)) == NULL)
+  if ((msg = (TCHAR *)malloc(sizeof(TCHAR) * (MAX_STATUS_MSG + 2))) == NULL)
   {
     free(sum);
     fclose(handle);
@@ -38,12 +34,10 @@ int hash_file(state *s, TCHAR *fn)
     return TRUE;
   }
 
-#define CUTOFF_LENGTH   78
-
   if (MODE(mode_verbose))
   {
     fn_length = _tcslen(fn);
-    if (fn_length > CUTOFF_LENGTH)
+    if (fn_length > MAX_STATUS_MSG)
     {
       // We have to make a duplicate of the string to call basename on it
       // We need the original name for the output later on
@@ -54,18 +48,18 @@ int hash_file(state *s, TCHAR *fn)
       my_filename = fn;
 
     _sntprintf(msg,
-	       CUTOFF_LENGTH-1,
+	       MAX_STATUS_MSG-1,
 	       _TEXT("Hashing: %s%s"), 
 	       my_filename, 
 	       _TEXT(BLANK_LINE));
     _ftprintf(stderr,_TEXT("%s\r"), msg);
 
-    if (fn_length > CUTOFF_LENGTH)
+    if (fn_length > MAX_STATUS_MSG)
       free(my_filename);
   }
 
-  uint32_t size;
-  fuzzy_hash_file(handle,&size,sum);
+
+  fuzzy_hash_file(handle,sum);
   prepare_filename(s,fn);
 
   if (MODE(mode_match_pretty))

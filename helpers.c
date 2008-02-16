@@ -124,12 +124,14 @@ void chop_line(TCHAR *s)
 
 /* Shift the contents of a string so that the values after 'new_start'
    will now begin at location 'start' */
-void shift_string(char *fn, unsigned int start, unsigned int new_start)
+void shift_string(TCHAR *fn, unsigned int start, unsigned int new_start)
 {
-  if (start > strlen(fn) || new_start < start)
+  size_t sz = _tcslen(fn);
+
+  if (start > sz || new_start < start)
     return;
 
-  while (new_start < strlen(fn))
+  while (new_start < sz)
     {
       fn[start] = fn[new_start];
       new_start++;
@@ -193,7 +195,7 @@ int find_comma_separated_string(TCHAR *s, unsigned int n)
   /* It's okay if there is no next comma, it just means that this is
      the last comma separated value in the string */
   if ((end = find_next_comma(s,start)) == -1)
-    end = strlen(s);
+    end = _tcslen(s);
 
   /* Strip off the quotation marks, if necessary. We don't have to worry
      about uneven quotation marks (i.e quotes at the start but not the end

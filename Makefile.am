@@ -16,7 +16,7 @@ ssdeep_SOURCES = main.c match.c engine.c         \
                  dig.c cycles.c helpers.c ui.c   \
                  main.h fuzzy.h tchar-local.h ssdeep.h
 
-EXTRA_DIST=config.guess config.sub
+EXTRA_DIST=config.guess config.sub sample.c
 
 nice:
 	rm -f *~
