@@ -19,7 +19,7 @@
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "main.h"
+#include "ssdeep.h"
 
 /* The basename function kept misbehaving on OS X, so I rewrote it.
    This function isn't perfect, nor is it designed to be. Because

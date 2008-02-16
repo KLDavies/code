@@ -122,11 +122,8 @@ int getopt(int argc, char *const argv[], const char *optstring);
 
 #endif  // ifdef _WIN32/else
 
-#ifdef __GLIBC__
-extern char *__progname;
-#else 
-char *__progname;
-#endif
+
+
 
 
 /* Because the modes are stored in a uint64_t variable, they must

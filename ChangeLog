@@ -12,6 +12,9 @@
 	* Lots of cleanup to fuzzy hashing code. This includes removing
 	  types like 'uchar' and replacing them with C99 types like
 	  unsigned char. Less work for mother means less work debugging.
+
+	* Moved definition of __progname to ssdeep.h. It's not being
+	  used by the fuzzy hashing library and caused problems on OS X.
 	
 
 2008-02-15 Jesse Kornblum <research@jessekornblum.com>
