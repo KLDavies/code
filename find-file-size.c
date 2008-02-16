@@ -1,13 +1,12 @@
 
 /* Fuzzy Hashing by Jesse Kornblum
    Copyright (C) 2008 ManTech International Corporation
-
-   $Id$ 
-
+   
 */
 
-#include "main.h"
+/* $Id$ */
 
+#include "main.h"
 
 #ifndef _WIN32
 
