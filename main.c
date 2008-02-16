@@ -1,23 +1,5 @@
 
-/* ssdeep
-   (C) Copyright 2006 ManTech International Corporation
-
-   $Id$
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
-   
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-   
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
+/* $Id$ */
 
 #include "ssdeep.h"
 
@@ -60,24 +42,8 @@ static void usage(void)
 }
 
 
-static void try(void)
-{  
-  /* There's no point in checking for silent mode here. The user has 
-     done something really wrong and needs all the help they can get. */
-  fprintf (stderr,"Try `%s -h` for more information%s", __progname, NEWLINE);
-  exit (EXIT_FAILURE);
-}
 
 
-static void sanity_check(state *s, int condition, char *msg)
-{
-  if (condition)
-  {
-    print_error(s, __progname, msg);
-    try();
-  }
-}
-  
 
 
 static void process_cmd_line(state *s, int argc, char **argv)
@@ -122,7 +88,7 @@ static void process_cmd_line(state *s, int argc, char **argv)
     case 't':
       s->threshold = (uint8_t)atol(optarg);
       if (s->threshold > 100)
-	fatal_error(s,__progname,"Illegal threshold");
+	fatal_error("%s: Illegal threshold", __progname);
       s->mode |= mode_threshold;
       break;
       
@@ -159,99 +125,133 @@ static void process_cmd_line(state *s, int argc, char **argv)
 }
 
 
-int is_absolute_path(char *fn)
-{
+
+
+
 #ifdef _WIN32
-  /* Windows has so many ways to make absolute paths (UNC, C:\, etc)
-     that it's hard to keep track. It doesn't hurt us
-     to call realpath as there are no symbolic links to lose. */
+static int prepare_windows_command_line(state *s)
+{
+  int argc;
+  TCHAR **argv;
+
+  argv = CommandLineToArgvW(GetCommandLineW(),&argc);
+  
+  s->argc = argc;
+  s->argv = argv;
+
   return FALSE;
-#else
-  return (fn[0] == DIR_SEPARATOR);
+}
 #endif
+
+
+
+static int is_absolute_path(TCHAR *fn)
+{
+  if (NULL == fn)
+    internal_error("Unknown error in is_absolute_path");
+  
+#ifdef _WIN32
+  return FALSE;
+#endif
+
+  return (DIR_SEPARATOR == fn[0]);
 }
 
 
-void generate_filename(state *s, char *argv, char *fn, char *cwd)
+
+void generate_filename(state *s, TCHAR *fn, TCHAR *cwd, TCHAR *input)
 {
-  if ((s->mode & mode_relative) || is_absolute_path(argv))
-    strncpy(fn,argv,PATH_MAX);
+  if (NULL == fn || NULL == input)
+    internal_error("Error calling generate_filename");
+
+  if ((s->mode & mode_relative) || is_absolute_path(input))
+    _tcsncpy(fn,input,PATH_MAX);
   else
-  {
-    /* Windows systems don't have symbolic links, so we don't
+    {
+      /* Windows systems don't have symbolic links, so we don't
        have to worry about carefully preserving the paths
-       they follow. Just use the system command to resolve the paths */
+       they follow. Just use the system command to resolve the paths */   
 #ifdef _WIN32
-    realpath(argv,fn);
-#else
-    if (cwd == NULL)
-      /* If we can't get the current working directory, we're not
+      _wfullpath(fn,input,PATH_MAX);
+#else     
+      if (NULL == cwd)
+	/* If we can't get the current working directory, we're not
          going to be able to build the relative path to this file anyway.
          So we just call realpath and make the best of things */
-      realpath(argv,fn);
-    else
-      snprintf(fn,PATH_MAX,"%s%c%s",cwd,DIR_SEPARATOR,argv);
+	realpath(input,fn);
+      else
+	snprintf(fn,PATH_MAX,"%s%c%s",cwd,DIR_SEPARATOR,input);
 #endif
-  }
+    }
 }
+
+
+
+
 
 
 int main(int argc, char **argv)
 {
-  char *fn, *cwd;
-  state *s = (state *)malloc(sizeof(state));
+  int count, status;
+  state *s;
+  TCHAR *fn, *cwd;
 
 #ifndef __GLIBC__
-  __progname = basename(argv[0]);
+  __progname  = basename(argv[0]);
 #endif
 
-  if (s == NULL)
-    fatal_error(s,NULL,"Unable to allocate memory for state");
+  s = (state *)malloc(sizeof(state));
+  // We can't use fatal_error because it requires a valid state
+  if (NULL == s)
+    fatal_error("%s: Unable to allocate state variable", __progname);
 
   if (initialize_state(s))
-    fatal_error(s,NULL,"Unable to initialize state");
+    fatal_error("%s: Unable to initialize state variable", __progname);
 
   process_cmd_line(s,argc,argv);
 
-  argv += optind;
+#ifdef _WIN32
+  if (prepare_windows_command_line(s))
+    fatal_error("%s: Unable to process command line arguments", __progname);
+#else
+  s->argc = argc;
+  s->argv = argv;
+#endif
 
-  /* We can't process standard input because the algorithm may require
-     us to restart the computation. There's no way to rewind standard 
-     input */
-  if (*argv == NULL)
-    fatal_error(s,NULL,"No input files");
+  /* Anything left on the command line at this point is a file
+     or directory we're supposed to process. If there's nothing
+     specified, we should tackle standard input */
+  if (optind == argc)
+    fatal_error("%s: No input files", __progname);
+  else
+    {
+      MD5DEEP_ALLOC(TCHAR,fn,PATH_MAX);
+      MD5DEEP_ALLOC(TCHAR,cwd,PATH_MAX);
 
-  fn  = (char *)malloc(sizeof(char) * PATH_MAX);
-  cwd = (char *)malloc(sizeof(char) * PATH_MAX);
-  if (fn == NULL || cwd == NULL)
-    fatal_error(s,NULL,
-		"Unable to allocate memory for current working directory");
+      cwd = _tgetcwd(cwd,PATH_MAX);
+      if (NULL == cwd)
+	fatal_error("%s: %s", __progname, strerror(errno));
 
-  cwd = getcwd(cwd,PATH_MAX);
-  if (cwd == NULL)
-  {
-    snprintf(cwd,PATH_MAX,
-	     "%s: Unable to find current working directory", __progname);
-    perror(cwd);
-    return EXIT_FAILURE;
-  }
+      count = optind;
 
-  while (*argv != NULL)
-  {
-    generate_filename(s,*argv,fn,cwd);
-    process(s,fn);
-    if (s->mode & mode_verbose)
-      fprintf(stderr,"%s\r", BLANK_LINE);
-    ++argv;
-  }
+      while (count < s->argc)
+	{  
+	  generate_filename(s,fn,cwd,s->argv[count]);
 
-  if (s->mode & mode_match_pretty)
-    match_pretty(s);
+#ifdef _WIN32
+	  status = process_win32(s,fn);
+#else
+	  status = process_normal(s,fn);
+#endif
 
-  /* We don't bother cleaning up the state, to include the list of 
-     matching files, as we're about to exit. All of the memory we have
-     allocated is going to be returned to the operating system, so 
-     there's no point in our explicitly free'ing it. */
+	  ++count;
+	}
 
-  return EXIT_SUCCESS;
+      free(fn);
+      free(cwd);
+    }
+
+
+
+  return (EXIT_SUCCESS);
 }

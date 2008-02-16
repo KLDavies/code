@@ -21,29 +21,68 @@
 
 #include "ssdeep.h"
 
+void try(void)
+{
+  fprintf (stderr,"Try `%s -h` for more information.%s", __progname, NEWLINE);
+}
+
+
+void sanity_check(state *s, int condition, char *msg)
+{
+  if (condition)
+    {
+      if (!(s->mode & mode_silent))
+	{
+	  print_status("%s: %s", __progname, msg);
+	  try();
+	}
+      exit (EXIT_FAILURE);
+    }
+}
+
+
 /* The basename function kept misbehaving on OS X, so I rewrote it.
    This function isn't perfect, nor is it designed to be. Because
    we're guarenteed to be working with a filename here, there's no way
    that s will end with a DIR_SEPARATOR (e.g. /foo/bar/). This function
    will not work properly for a string that ends in a DIR_SEPARATOR */
-int my_basename(char *s)
+int my_basename(TCHAR *s)
 {
-  unsigned long pos = strlen(s);
-  if (0 == pos || pos > PATH_MAX)
-    return TRUE;
+  size_t len;
+  TCHAR *tmp = _tcsrchr(s,DIR_SEPARATOR);
 
-  while(s[pos] != DIR_SEPARATOR && pos > 0)
-    --pos;
-
-  // If there were no DIR_SEPARATORs in the string, we were still successful!
-  if (0 == pos)
+  if (NULL == tmp)
     return FALSE;
 
-  // The current character is a DIR_SEPARATOR. We advance one to ignore it
-  ++pos;
-  shift_string(s,0,pos);
+  len = _tcslen(tmp);
+
+  // We advance tmp one character to move us past the DIR_SEPARATOR
+  _tmemmove(s,tmp+1,len);
+
   return FALSE;
 }
+
+
+int my_dirname(TCHAR *c)
+{
+  TCHAR *tmp;
+
+  if (NULL == c)
+    return TRUE;
+
+  /* If there are no DIR_SEPARATORs in the directory name, then the 
+     directory name should be the empty string */
+  tmp = _tcsrchr(c,DIR_SEPARATOR);
+  if (NULL != tmp)
+    tmp[1] = 0;
+  else
+    c[0] = 0;
+
+  return FALSE;
+}
+
+
+
 
 
 void prepare_filename(state *s, char *fn)
@@ -59,34 +98,14 @@ void prepare_filename(state *s, char *fn)
 }
 
 
-void print_error(state *s, char *fn, char *msg)
-{
-  if (s->mode & mode_silent)
-    return;
-
-  if (msg != NULL)
-  {
-    if (fn != NULL)
-      fprintf (stderr,"%s: %s%s", fn, msg, NEWLINE);
-    else
-      fprintf (stderr,"%s: %s%s", __progname, msg, NEWLINE);
-  }
-}
-
-
-void fatal_error(state *s, char *fn, char *msg)
-{
-  print_error(s,fn,msg);
-  exit (EXIT_FAILURE);
-}
  
 
 
 
 // Remove the newlines, if any. Works on both DOS and *nix newlines
-void chop_line(char *s)
+void chop_line(TCHAR *s)
 {
-  uint64_t pos = strlen(s);
+  uint64_t pos = _tcslen(s);
 
   while (pos > 0) 
   {
@@ -94,7 +113,7 @@ void chop_line(char *s)
        condition the computer will examine if first. If pos == 0, we
        don't want to be checking s[pos-1] under any circumstances! */
 
-    if (!(s[pos-1] == '\r' || s[pos-1] == '\n'))
+    if (!(s[pos-1] == _TEXT('\r') || s[pos-1] == _TEXT('\n')))
       return;
 
     s[pos-1] = 0;
@@ -124,19 +143,19 @@ void shift_string(char *fn, unsigned int start, unsigned int new_start)
 
 /* Find the index of the next comma in the string s starting at index start.
    If there is no next comma, returns -1. */
-int find_next_comma(char *s, unsigned int start)
+int find_next_comma(TCHAR *s, unsigned int start)
 {
-  size_t size=strlen(s);
+  size_t size = _tcslen(s);
   unsigned int pos = start;
   int in_quote = FALSE;
 
   while (pos < size)
   {
     switch (s[pos]) {
-    case '"':
+    case _TEXT('"'):
       in_quote = !in_quote;
       break;
-    case ',':
+    case _TEXT(','):
       if (in_quote)
         break;
 
@@ -158,7 +177,7 @@ void mm_magic(void){MM_INIT("%s\n","\x49\x20\x64\x6f\x20\x6e\x6f\x74\x20\x62\x65
 /* Returns the string after the nth comma in the string s. If that
    string is quoted, the quotes are removed. If there is no valid
    string to be found, returns TRUE. Otherwise, returns FALSE */
-int find_comma_separated_string(char *s, unsigned int n)
+int find_comma_separated_string(TCHAR *s, unsigned int n)
 {
   int start = 0, end;
   unsigned int count = 0;
@@ -179,9 +198,9 @@ int find_comma_separated_string(char *s, unsigned int n)
   /* Strip off the quotation marks, if necessary. We don't have to worry
      about uneven quotation marks (i.e quotes at the start but not the end
      as they are handled by the the find_next_comma function. */
-  if (s[start] == '"')
+  if (s[start] == _TEXT('"'))
     ++start;
-  if (s[end - 1] == '"')
+  if (s[end - 1] == _TEXT('"'))
     end--;
 
   s[end] = 0;

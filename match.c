@@ -20,7 +20,8 @@
 */
 
 
-#include "main.h"
+#include "ssdeep.h"
+
 
 // The longest line we should encounter when reading files of known hashes
 #define MAX_STR_LEN  2048
@@ -32,40 +33,45 @@ int lsh_list_init(lsh_list *l)
   return FALSE;
 }
 
-#define MAX(A,B)            (A>B)?A:B
-#define STRINGS_EQUAL(A,B)  !strncmp(A,B,MAX(strlen(A),strlen(B)))
+#define STRINGS_EQUAL(A,B)    !_tcsncmp(A,B,MAX(_tcslen(A),_tcslen(B)))
 
-int match_compare(state *s, char *fn, char *sum)
+int match_compare(state *s, TCHAR *fn, char *sum)
 {
+  size_t fn_len  = _tcslen(fn);
+  size_t sum_len = strlen(sum);
+
   int status = FALSE;
-  uint32_t score;
+  int score;
   lsh_node *tmp = s->known_hashes->top;
 
   while (tmp != NULL)
   {
     if (s->mode & mode_match_pretty)
     {
-      // Prevent printing the redundant "A matches A"
-      if (STRINGS_EQUAL(fn,tmp->fn) && STRINGS_EQUAL(sum,tmp->hash))
+      /* Prevent printing the redundant "A matches A" */
+      if (!(_tcsncmp(fn,tmp->fn,MAX(fn_len,_tcslen(tmp->fn)))) &&
+	  !(strncmp(sum,tmp->hash,MAX(sum_len,strlen(tmp->hash)))))
       {
 	tmp = tmp->next;
 	continue;
       }
     }
 
-    score = spamsum_match(s,sum,tmp->hash);
+    score = fuzzy_compare(sum,tmp->hash);
     if (score > s->threshold)
     {
       if (s->mode & mode_csv)
-	printf ("%s,%s,%"PRIu32"%s", fn, tmp->fn,score,NEWLINE);
+	  _tprintf(_TEXT("%s,%s,%"PRIu32"%s"), fn, tmp->fn, score, NEWLINE);
       else
-	printf ("%s matches %s (%"PRIu32")%s", fn, tmp->fn, score, NEWLINE);
-
-      // We don't return right away as this file could match more than
-      // one signature. 
+	  _tprintf(_TEXT("%s matches %s (%"PRIu32")%s"), 
+		   fn, tmp->fn, score, NEWLINE);
+      
+      
+      /* We don't return right away as this file could match more than
+	 one signature.  */
       status = TRUE;
     }
-
+    
     tmp = tmp->next;
   }
 
@@ -73,28 +79,25 @@ int match_compare(state *s, char *fn, char *sum)
 }
 
 
-static int lsh_list_insert(state *s, lsh_list *l, char *fn, char *sum)
+static int lsh_list_insert(state *s, lsh_list *l, TCHAR *fn, char *sum)
 {
   lsh_node *new;
 
   if ((new = (lsh_node *)malloc(sizeof(lsh_node))) == NULL)
-  {
-    print_error(s,fn,"out of memory");
-    return TRUE;
-  }
+    fatal_error("%s: Out of memory", __progname);
 
   new->next = NULL;
   if (((new->hash = strdup(sum)) == NULL) ||
-      ((new->fn   = strdup(fn))  == NULL))
+      ((new->fn   = _tcsdup(fn))  == NULL))
   {
-    print_error(s,fn,"out of memory");
+    print_error(s,"%s: out of memory", __progname);
     return TRUE;
   }
 
   if (l->bottom == NULL)
   {
     if (l->top != NULL)
-      fatal_error(s,fn,"internal data structure inconsistency");
+      fatal_error("%s: internal data structure inconsistency", fn);
 
     l->top = new;
     l->bottom = new;
@@ -114,7 +117,7 @@ int match_pretty(state *s)
   while (tmp != NULL)
   {
     if (match_compare(s,tmp->fn,tmp->hash))
-      printf ("\n");
+      print_status("");
 
     tmp = tmp->next;
   }
@@ -123,15 +126,18 @@ int match_pretty(state *s)
 }
 
 
-int match_add(state *s, char *fn, char *hash)
+int match_add(state *s, TCHAR *fn, char *hash)
 {
   return (lsh_list_insert(s,s->known_hashes,fn,hash));
 }
 
 
+/* RBF - We have to convert the Unicode line we read into
+   a Unicode filename AND a non-Unicode hash */
 int match_load(state *s, char *fn)
 {
-  unsigned char *str, *known_file_name;
+  TCHAR *str, *known_file_name;
+  unsigned char *known_hash;
   FILE *handle;
 
   if ((handle = fopen(fn,"rb")) == NULL)
@@ -141,43 +147,43 @@ int match_load(state *s, char *fn)
     return TRUE;
   }
 
-  str = (unsigned char *)malloc(sizeof(unsigned char) * MAX_STR_LEN);
+  str = (TCHAR *)malloc(sizeof(TCHAR) * MAX_STR_LEN);
   if (str == NULL)
   {
-    print_error(s,fn, "out of memory");
+    print_error(s,"%s: out of memory", __progname);
     return TRUE;
   }
   
   // The first line should be the header. We don't need to chop it
   // as we're only comparing it to the length of the known header.
-  fgets(str,MAX_STR_LEN,handle);
-  if (strncmp(str,SSDEEPV1_HEADER,strlen(SSDEEPV1_HEADER)))
+  _fgetts(str,MAX_STR_LEN,handle);
+  if (_tcsncmp(str,_TEXT(SSDEEPV1_HEADER),_tcslen(_TEXT(SSDEEPV1_HEADER))))
   {
     free(str);
-    print_error(s,fn, "invalid file header");
+    print_error(s,"%s: invalid file header", fn);
     return TRUE;
   }
   
-  known_file_name = (unsigned char *)malloc(sizeof(unsigned char)*MAX_STR_LEN);
+  known_file_name = (TCHAR *)malloc(sizeof(TCHAR) * MAX_STR_LEN);
   if (known_file_name == NULL)
-  {
-    free(str);
-    print_error(s,fn, "out of memory");
-    return TRUE;
-  }
+    fatal_error("%s: Out of memory", __progname);
 
-  while (fgets(str,MAX_STR_LEN,handle))
+  known_hash = (unsigned char *)malloc(sizeof(unsigned char) * MAX_STR_LEN);
+  if (NULL == known_hash)
+    fatal_error("%s: Out of memory", __progname);
+
+  while (_fgetts(str,MAX_STR_LEN,handle))
   {
     chop_line(str);
 
-    strncpy(known_file_name,str,MAX_STR_LEN);
+    _tcsncpy(known_file_name,str,MAX_STR_LEN);
 
     // The file format is:  hash,filename
     find_comma_separated_string(str,0);
     find_comma_separated_string(known_file_name,1);
 
       //    if (lsh_list_insert(s,s->known_hashes,known_file_name,str))
-    if (match_add(s,known_file_name,str))
+    if (match_add(s,known_file_name,known_hash))
     {
       // If we can't insert this value, we're probably out of memory.
       // There's no sense trying to read the rest of the file.

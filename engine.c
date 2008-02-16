@@ -8,7 +8,7 @@
 
 
 
-int hash_file(state *s, char *fn)
+int hash_file(state *s, TCHAR *fn)
 {
   size_t fn_length;
   char *sum, *msg, *my_filename;
@@ -57,7 +57,9 @@ int hash_file(state *s, char *fn)
       free(my_filename);
   }
 
-  ss_compute(handle,sum);
+  //  ss_compute(handle,sum);
+  uint32_t size;
+  fuzzy_hash_file(handle,&size,sum);
   prepare_filename(s,fn);
 
   if (MODE(mode_match_pretty))

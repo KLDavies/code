@@ -18,4 +18,4 @@ char *__progname;
 
 
 
-#endif __SSDEEP_H
+#endif  // #ifndef __SSDEEP_H

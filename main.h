@@ -38,6 +38,10 @@
 # include <inttypes.h>
 #endif
 
+#ifdef HAVE_DIRENT_H
+# include <dirent.h>
+#endif
+
 #ifdef __LINUX
 // These are used to find file sizes of block devices. See helpers.c
 #include <sys/ioctl.h>
@@ -45,13 +49,12 @@
 #endif
 
 #include "fuzzy.h"
+#include "tchar-local.h"
 
-/* RBF - Do we need fseeko defined?
 #ifndef HAVE_FSEEKO
 # define fseeko fseek
 # define ftello ftell
 #endif
-*/
 
 #define FALSE  0
 #define TRUE   1
@@ -69,9 +72,28 @@
 #define SSDEEPV1_HEADER        "ssdeep,1.0--blocksize:hash:hash,filename"
 #define OUTPUT_FILE_HEADER     SSDEEPV1_HEADER
 
+#define MD5DEEP_ALLOC(TYPE,VAR,SIZE)     \
+VAR = (TYPE *)malloc(sizeof(TYPE) * SIZE);  \
+if (NULL == VAR)  \
+   return EXIT_FAILURE; \
+memset(VAR,0,SIZE * sizeof(TYPE));
+
+
+/* These are the types of files we can encounter while hashing */
+#define file_regular    0
+#define file_directory  1
+#define file_door       2
+#define file_block      3
+#define file_character  4
+#define file_pipe       5
+#define file_socket     6
+#define file_symlink    7
+#define file_unknown  254
+
 
 typedef struct _lsh_node {
-  char             *hash, *fn;
+  char    *hash;
+  TCHAR   *fn;
   struct _lsh_node *next;
 } lsh_node;
 
@@ -88,6 +110,10 @@ typedef struct {
   //  uint32_t  block_size;
 
   uint8_t  threshold;
+
+  int     argc;
+  TCHAR   **argv;
+
 
 } state;
 
@@ -140,6 +166,11 @@ int getopt(int argc, char *const argv[], const char *optstring);
 #define mode_csv          1<<8
 #define mode_threshold    1<<9
 
+
+
+
+
+
 #define MODE(A)   (s->mode & A)
 #define BLANK_LINE   \
 "                                                                               "
@@ -158,37 +189,51 @@ int process(state *s, char *fn);
 // *********************************************************************
 // Engine functions
 // *********************************************************************
-int hash_file(state *s, char *fn);
+int hash_file(state *s, TCHAR *fn);
 
 // Returns a score from 0-100 about how well the two sums match
-uint32_t spamsum_match(state *s, const char *str1, const char *str2);
+//uint32_t spamsum_match(state *s, const char *str1, const char *str2);
 
 
 
 // *********************************************************************
 // Helper functions
 // *********************************************************************
+void try(void);
+void sanity_check(state *s, int condition, char *msg);
 
 /* The basename function kept misbehaving on OS X, so I rewrote it.
    This function isn't perfect, nor is it designed to be. Because
    we're guarenteed to be working with a filename here, there's no way
    that s will end with a DIR_SEPARATOR (e.g. /foo/bar/). This function
    will not work properly for a string that ends in a DIR_SEPARATOR */
-int my_basename(char *s);
+int my_basename(TCHAR *s);
+int my_dirname(TCHAR *s);
 
-void print_error(state *s, char *fn, char *msg);
-void fatal_error(state *s, char *fn, char *msg);
 
 /* Remove the newlines, if any, from the string. Works with both
    \r and \r\n style newlines */
-void chop_line(char *s);
+void chop_line(TCHAR *s);
 
-int find_comma_separated_string(char *s, unsigned int n);
+int find_comma_separated_string(TCHAR *s, unsigned int n);
 void shift_string(char *fn, unsigned int start, unsigned int new_start);
 void prepare_filename(state *s, char *fn);
 
 /* Returns the size of the given file, in bytes. */
 off_t find_file_size(FILE *h);
+
+
+// *********************************************************************
+// User Interface Functions
+// *********************************************************************
+void print_status(char *fmt, ...);
+void print_error(state *s, char *fmt, ...);
+void print_error_unicode(state *s, TCHAR *fn, char *fmt, ...);
+void internal_error(char *fmt, ... );
+void fatal_error(char *fmt, ... );
+void display_filename(FILE *out, TCHAR *fn);
+
+
 
 // *********************************************************************
 // Matching functions
@@ -197,13 +242,13 @@ int lsh_list_init(lsh_list *l);
 
 
 // See if the existing file and hash are in the set of known hashes
-int match_compare(state *s, char *fn, char *sum);
+int match_compare(state *s, TCHAR *fn, char *sum);
 
 // Load a file of known hashes
 int match_load(state *s, char *fn);
 
 // Add a single new hash to the set of known hashes
-int match_add(state *s, char *fn, char *hash);
+int match_add(state *s, TCHAR *fn, char *hash);
 
 // Display all matches in the set of known hashes nicely
 int match_pretty(state *s);

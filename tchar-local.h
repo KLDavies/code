@@ -53,6 +53,7 @@
 
 #define  _tgetcwd   getcwd
 #define  _tfopen    fopen
+#define  _fgetts    fgets
 
 #define  _topendir  opendir
 #define  _treaddir  readdir
