@@ -11,27 +11,30 @@
 int hash_file(state *s, TCHAR *fn)
 {
   size_t fn_length;
-  char *sum, *msg, *my_filename;
+  char *sum;
+  TCHAR *my_filename, *msg;
   FILE *handle;
   
-  if ((handle = fopen(fn,"rb")) == NULL)
+  handle = _tfopen(fn,_TEXT("rb"));
+  if (NULL == handle)
   {
-    print_error(s,fn,strerror(errno));
+    print_error_unicode(s,fn,"%s", strerror(errno));
     return TRUE;
   }
  
   if ((sum = (char *)malloc(sizeof(char) * FUZZY_MAX_RESULT)) == NULL)
   {
     fclose(handle);
-    print_error(s,fn,"out of memory");
+    print_error_unicode(s,fn,"%s", strerror(errno));
     return TRUE;
   }
 
-  if ((msg = (char *)malloc(sizeof(char) * 80)) == NULL)
+  /* RBF - Move '80' into some kind of define */
+  if ((msg = (TCHAR *)malloc(sizeof(TCHAR) * 80)) == NULL)
   {
     free(sum);
     fclose(handle);
-    print_error(s,fn,"out of memory");
+    print_error_unicode(s,fn,"%s", strerror(errno));
     return TRUE;
   }
 
@@ -39,25 +42,28 @@ int hash_file(state *s, TCHAR *fn)
 
   if (MODE(mode_verbose))
   {
-    fn_length = strlen(fn);
+    fn_length = _tcslen(fn);
     if (fn_length > CUTOFF_LENGTH)
     {
       // We have to make a duplicate of the string to call basename on it
       // We need the original name for the output later on
-      my_filename = strdup(fn);
+      my_filename = _tcsdup(fn);
       my_basename(my_filename);
     }
     else
       my_filename = fn;
 
-    snprintf(msg,CUTOFF_LENGTH-1,"Hashing: %s%s", my_filename, BLANK_LINE);
-    fprintf(stderr,"%s\r", msg);
+    _sntprintf(msg,
+	       CUTOFF_LENGTH-1,
+	       _TEXT("Hashing: %s%s"), 
+	       my_filename, 
+	       _TEXT(BLANK_LINE));
+    _ftprintf(stderr,_TEXT("%s\r"), msg);
 
     if (fn_length > CUTOFF_LENGTH)
       free(my_filename);
   }
 
-  //  ss_compute(handle,sum);
   uint32_t size;
   fuzzy_hash_file(handle,&size,sum);
   prepare_filename(s,fn);
@@ -65,7 +71,7 @@ int hash_file(state *s, TCHAR *fn)
   if (MODE(mode_match_pretty))
   {
     if (match_add(s,fn,sum))
-      print_error(s,fn,"Unable to add hash to set of known hashes");
+      print_error_unicode(s,fn,"Unable to add hash to set of known hashes");
   }
   else if (MODE(mode_match) || MODE(mode_directory))
   {
@@ -73,7 +79,7 @@ int hash_file(state *s, TCHAR *fn)
 
     if (MODE(mode_directory))
       if (match_add(s,fn,sum))
-	print_error(s,fn,"Unable to add hash to set of known hashes");
+	print_error_unicode(s,fn,"Unable to add hash to set of known hashes");
   }
   else
   {

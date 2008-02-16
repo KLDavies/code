@@ -85,13 +85,13 @@ int my_dirname(TCHAR *c)
 
 
 
-void prepare_filename(state *s, char *fn)
+void prepare_filename(state *s, TCHAR *fn)
 {
   if (s->mode & mode_barename)
   {
     if (my_basename(fn))
     {
-      print_error(s,fn,"unable to shorten filename");
+      print_error_unicode(s,fn,"Unable to shorten filename");
       return;
     }
   }

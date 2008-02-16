@@ -33,7 +33,7 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = powerpc-apple-darwin8.11.0
-host_triplet = powerpc-apple-darwin8.11.0
+host_triplet = i386-pc-mingw32
 bin_PROGRAMS = ssdeep$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
@@ -60,18 +60,18 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(man1dir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libssdeep_la_LIBADD =
-am_libssdeep_la_OBJECTS = fuzzy.lo edit_dist.lo find-file-size.lo
-libssdeep_la_OBJECTS = $(am_libssdeep_la_OBJECTS)
-libssdeep_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+libfuzzy_la_LIBADD =
+am_libfuzzy_la_OBJECTS = fuzzy.lo edit_dist.lo find-file-size.lo
+libfuzzy_la_OBJECTS = $(am_libfuzzy_la_OBJECTS)
+libfuzzy_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(libssdeep_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(libfuzzy_la_LDFLAGS) $(LDFLAGS) -o $@
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_ssdeep_OBJECTS = main.$(OBJEXT) match.$(OBJEXT) engine.$(OBJEXT) \
-	dig.$(OBJEXT) cycles.$(OBJEXT) helpers.$(OBJEXT)
+	dig.$(OBJEXT) cycles.$(OBJEXT) helpers.$(OBJEXT) ui.$(OBJEXT)
 ssdeep_OBJECTS = $(am_ssdeep_OBJECTS)
-ssdeep_DEPENDENCIES = libssdeep.la
+ssdeep_DEPENDENCIES = libfuzzy.la
 ssdeep_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(ssdeep_LDFLAGS) \
 	$(LDFLAGS) -o $@
@@ -87,8 +87,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libssdeep_la_SOURCES) $(ssdeep_SOURCES)
-DIST_SOURCES = $(libssdeep_la_SOURCES) $(ssdeep_SOURCES)
+SOURCES = $(libfuzzy_la_SOURCES) $(ssdeep_SOURCES)
+DIST_SOURCES = $(libfuzzy_la_SOURCES) $(ssdeep_SOURCES)
 man1dir = $(mandir)/man1
 NROFF = nroff
 MANS = $(man_MANS)
@@ -109,31 +109,31 @@ distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run aclocal-1.10
 AMTAR = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run tar
-AR = ar
-AS = as
+AR = mingw32-ar
+AS = mingw32-as
 AUTOCONF = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run autoconf
 AUTOHEADER = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run autoheader
 AUTOMAKE = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run automake-1.10
 AWK = awk
-CC = gcc
+CC = mingw32-gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
-CPP = gcc -E
-CPPFLAGS = -I/usr/local/include 
-CXX = g++
-CXXCPP = g++ -E
+CPP = mingw32-gcc -E
+CPPFLAGS = -I/usr/local/include -DUNICODE -D_UNICODE 
+CXX = mingw32-g++
+CXXCPP = mingw32-g++ -E
 CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -g -O2
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
-DLLTOOL = dlltool
+DLLTOOL = mingw32-dlltool
 ECHO = echo
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
 EGREP = /usr/bin/grep -E
-EXEEXT = 
+EXEEXT = .exe
 F77 = 
 FFLAGS = 
 GREP = /usr/bin/grep
@@ -144,13 +144,13 @@ INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LDFLAGS = -L/usr/local/lib 
 LIBOBJS = 
-LIBS = 
+LIBS = -liberty 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LN_S = ln -s
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run makeinfo
 MKDIR_P = ./install-sh -c -d
-OBJDUMP = objdump
+OBJDUMP = mingw32-objdump
 OBJEXT = o
 PACKAGE = ssdeep
 PACKAGE_BUGREPORT = research@jessekornblum.com
@@ -159,17 +159,17 @@ PACKAGE_STRING = SSDEEP 1.2
 PACKAGE_TARNAME = ssdeep
 PACKAGE_VERSION = 1.2
 PATH_SEPARATOR = :
-RANLIB = ranlib
+RANLIB = mingw32-ranlib
 SET_MAKE = 
 SHELL = /bin/sh
-STRIP = strip
+STRIP = mingw32-strip
 VERSION = 1.2
 abs_builddir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
 abs_srcdir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
 abs_top_builddir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
 abs_top_srcdir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
-ac_ct_CC = gcc
-ac_ct_CXX = g++
+ac_ct_CC = 
+ac_ct_CXX = 
 ac_ct_F77 = 
 am__include = include
 am__leading_dot = .
@@ -188,11 +188,11 @@ datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
-host = powerpc-apple-darwin8.11.0
-host_alias = 
-host_cpu = powerpc
-host_os = darwin8.11.0
-host_vendor = apple
+host = i386-pc-mingw32
+host_alias = mingw32
+host_cpu = i386
+host_os = mingw32
+host_vendor = pc
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
@@ -205,7 +205,7 @@ mandir = ${datarootdir}/man
 mkdir_p = $(top_builddir)/./install-sh -c -d
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /usr/local
+prefix = /Users/jessekornblum/tmp/
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
@@ -215,16 +215,16 @@ sysconfdir = ${prefix}/etc
 target_alias = 
 top_builddir = .
 top_srcdir = .
-ssdeep_LDADD = libssdeep.la
+ssdeep_LDADD = libfuzzy.la
 ssdeep_LDFLAGS = -static
-lib_LTLIBRARIES = libssdeep.la
-libssdeep_la_SOURCES = fuzzy.c edit_dist.c find-file-size.c
-libssdeep_la_LDFLAGS = -no-undefined -version-info 0:0:0
-include_HEADERS = ssdeep.h
+lib_LTLIBRARIES = libfuzzy.la
+libfuzzy_la_SOURCES = fuzzy.c edit_dist.c find-file-size.c
+libfuzzy_la_LDFLAGS = -no-undefined -version-info 0:0:0
+include_HEADERS = fuzzy.h
 man_MANS = ssdeep.1
-ssdeep_SOURCES = main.c match.c engine.c       \
-                 dig.c cycles.c helpers.c      \
-                 main.h fuzzy.h tchar-local.h
+ssdeep_SOURCES = main.c match.c engine.c         \
+                 dig.c cycles.c helpers.c ui.c   \
+                 main.h fuzzy.h tchar-local.h ssdeep.h
 
 EXTRA_DIST = config.guess config.sub
 all: config.h
@@ -309,8 +309,8 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libssdeep.la: $(libssdeep_la_OBJECTS) $(libssdeep_la_DEPENDENCIES) 
-	$(libssdeep_la_LINK) -rpath $(libdir) $(libssdeep_la_OBJECTS) $(libssdeep_la_LIBADD) $(LIBS)
+libfuzzy.la: $(libfuzzy_la_OBJECTS) $(libfuzzy_la_DEPENDENCIES) 
+	$(libfuzzy_la_LINK) -rpath $(libdir) $(libfuzzy_la_OBJECTS) $(libfuzzy_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
@@ -358,6 +358,7 @@ include ./$(DEPDIR)/fuzzy.Plo
 include ./$(DEPDIR)/helpers.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/match.Po
+include ./$(DEPDIR)/ui.Po
 
 .c.o:
 	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

@@ -48,8 +48,6 @@ void print_error_unicode(state *s, TCHAR *fn, char *fmt, ...)
     {
       display_filename(stderr,fn);
       fprintf(stderr,": ");
-      
-
       MD5DEEP_PRINT_MSG(stderr,fmt);
     }
 }

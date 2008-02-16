@@ -180,11 +180,11 @@ int getopt(int argc, char *const argv[], const char *optstring);
 // *********************************************************************
 // Checking for cycles
 // *********************************************************************
-int done_processing_dir(char *fn);
-int processing_dir(char *fn);
-int have_processed_dir(char *fn);
+int done_processing_dir(TCHAR *fn);
+int processing_dir(TCHAR *fn);
+int have_processed_dir(TCHAR *fn);
 
-int process(state *s, char *fn);
+int process(state *s, TCHAR *fn);
 
 // *********************************************************************
 // Engine functions
@@ -217,7 +217,7 @@ void chop_line(TCHAR *s);
 
 int find_comma_separated_string(TCHAR *s, unsigned int n);
 void shift_string(char *fn, unsigned int start, unsigned int new_start);
-void prepare_filename(state *s, char *fn);
+void prepare_filename(state *s, TCHAR *fn);
 
 /* Returns the size of the given file, in bytes. */
 off_t find_file_size(FILE *h);
