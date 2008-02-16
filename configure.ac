@@ -42,6 +42,8 @@ AC_CHECK_HEADERS([inttypes.h])
 #AC_CHECK_HEADERS([limits.h])
 #AC_CHECK_HEADERS([stdarg.h])
 
+AC_FUNC_FSEEKO
+
 AC_OUTPUT
 
 

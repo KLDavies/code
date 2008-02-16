@@ -68,8 +68,8 @@ libssdeep_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(libssdeep_la_LDFLAGS) $(LDFLAGS) -o $@
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_ssdeep_OBJECTS = cycles.$(OBJEXT) dig.$(OBJEXT) helpers.$(OBJEXT) \
-	main.$(OBJEXT) match.$(OBJEXT)
+am_ssdeep_OBJECTS = main.$(OBJEXT) match.$(OBJEXT) engine.$(OBJEXT) \
+	dig.$(OBJEXT) cycles.$(OBJEXT) helpers.$(OBJEXT)
 ssdeep_OBJECTS = $(am_ssdeep_OBJECTS)
 ssdeep_DEPENDENCIES = libssdeep.la
 ssdeep_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -222,9 +222,9 @@ libssdeep_la_SOURCES = fuzzy.c edit_dist.c
 libssdeep_la_LDFLAGS = -no-undefined -version-info 0:0:0
 include_HEADERS = ssdeep.h
 man_MANS = ssdeep.1
-ssdeep_SOURCES = cycles.c  dig.c  \
-                 helpers.c  main.c  match.c \
-                 main.h ssdeep.h tchar-local.h
+ssdeep_SOURCES = main.c match.c engine.c       \
+                 dig.c cycles.c helpers.c      \
+                 main.h fuzzy.h tchar-local.h
 
 EXTRA_DIST = config.guess config.sub
 all: config.h
@@ -352,6 +352,7 @@ distclean-compile:
 include ./$(DEPDIR)/cycles.Po
 include ./$(DEPDIR)/dig.Po
 include ./$(DEPDIR)/edit_dist.Plo
+include ./$(DEPDIR)/engine.Po
 include ./$(DEPDIR)/fuzzy.Plo
 include ./$(DEPDIR)/helpers.Po
 include ./$(DEPDIR)/main.Po

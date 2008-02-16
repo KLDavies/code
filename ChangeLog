@@ -4,6 +4,14 @@
 	  Nobody was using it.
 
 	* Appended API functions to hash file or buffer.
+
+	* Moved ssdeep code into engine.c, moved fuzzy hashing
+	  code into fuzzy.c. This will help us create libfuzzy
+	  and fuzzy.dll.
+
+	* Lots of cleanup to fuzzy hashing code. This includes removing
+	  types like 'uchar' and replacing them with C99 types like
+	  unsigned char. Less work for mother means less work debugging.
 	
 
 2008-02-15 Jesse Kornblum <research@jessekornblum.com>

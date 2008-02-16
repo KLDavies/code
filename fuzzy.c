@@ -43,20 +43,6 @@
 
 #include "main.h"
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
-
-typedef unsigned char uchar;
-
-// the output is a string of length 64 in base64
-#define SPAMSUM_LENGTH 64
-#define MAX_RESULT    (SPAMSUM_LENGTH + (SPAMSUM_LENGTH/2 + 20))
-
 #define MIN_BLOCKSIZE  3
 #define ROLLING_WINDOW 7
 
@@ -67,7 +53,7 @@ typedef unsigned char uchar;
 #define BUFFER_SIZE  8192
 
 static struct {
-  uchar window[ROLLING_WINDOW];
+  unsigned char window[ROLLING_WINDOW];
   uint32_t h1, h2, h3;
   uint32_t n;
 } roll_state;
@@ -83,7 +69,7 @@ static struct {
   h3 is a shift/xor based rolling hash, and is mostly needed to ensure that
   we can cope with large blocksize values
 */
-static inline uint32_t roll_hash(uchar c)
+static inline uint32_t roll_hash(unsigned char c)
 {
   roll_state.h2 -= roll_state.h1;
   roll_state.h2 += ROLLING_WINDOW * c;
@@ -113,7 +99,7 @@ static uint32_t roll_reset(void)
 }
 
 /* a simple non-rolling hash, based on the FNV hash */
-static inline uint32_t sum_hash(uchar c, uint32_t h)
+static inline uint32_t sum_hash(unsigned char c, uint32_t h)
 {
   h *= HASH_PRIME;
   h ^= c;
@@ -126,7 +112,7 @@ typedef struct _ss_context {
   uint32_t h, h2, h3;
   uint32_t j, n, i, k;
   uint32_t block_size;
-  uchar ret2[SPAMSUM_LENGTH/2 + 1];
+  unsigned char ret2[SPAMSUM_LENGTH/2 + 1];
 } ss_context;
 
 
@@ -245,7 +231,9 @@ static int ss_update(ss_context *ctx, FILE *handle)
 }
 
 
-static int ss_compute(FILE *handle, char *result)
+int fuzzy_hash_file(FILE *handle,
+		    uint32_t *block_size,
+		    char *result)
 {
   int done = FALSE;
   ss_context *ctx = (ss_context *)malloc(sizeof(ss_context));
@@ -257,7 +245,9 @@ static int ss_compute(FILE *handle, char *result)
 
   while (!done)
   {
-    rewind(handle);
+    if (fseeko(handle,0,SEEK_SET))
+      return TRUE;
+
     ss_update(ctx,handle);
 
     /* our blocksize guess may have been way off - repeat if necessary */
@@ -303,7 +293,7 @@ static int has_common_substring(const char *s1, const char *s2)
      the first string */
   for (i=0;s1[i];i++) 
   {
-    hashes[i] = roll_hash((uchar)s1[i]);
+    hashes[i] = roll_hash((unsigned char)s1[i]);
   }
   num_hashes = i;
   
@@ -315,7 +305,7 @@ static int has_common_substring(const char *s1, const char *s2)
      candidate substring match. We then confirm that match with
      a direct string comparison */
   for (i=0;s2[i];i++) {
-    uint32_t h = roll_hash((uchar)s2[i]);
+    uint32_t h = roll_hash((unsigned char)s2[i]);
     if (i < ROLLING_WINDOW-1) continue;
     for (j=ROLLING_WINDOW-1;j<num_hashes;j++) 
     {
@@ -513,86 +503,6 @@ uint32_t spamsum_match(state *s, const char *str1, const char *str2)
 }
 
 
-int hash_file(state *s, char *fn)
-{
-  size_t fn_length;
-  char *sum, *msg, *my_filename;
-  FILE *handle;
-  
-  if ((handle = fopen(fn,"rb")) == NULL)
-  {
-    print_error(s,fn,strerror(errno));
-    return TRUE;
-  }
- 
-  if ((sum = (char *)malloc(sizeof(char) * MAX_RESULT)) == NULL)
-  {
-    fclose(handle);
-    print_error(s,fn,"out of memory");
-    return TRUE;
-  }
-
-  if ((msg = (char *)malloc(sizeof(char) * 80)) == NULL)
-  {
-    free(sum);
-    fclose(handle);
-    print_error(s,fn,"out of memory");
-    return TRUE;
-  }
-
-#define CUTOFF_LENGTH   78
-
-  if (MODE(mode_verbose))
-  {
-    fn_length = strlen(fn);
-    if (fn_length > CUTOFF_LENGTH)
-    {
-      // We have to make a duplicate of the string to call basename on it
-      // We need the original name for the output later on
-      my_filename = strdup(fn);
-      my_basename(my_filename);
-    }
-    else
-      my_filename = fn;
-
-    snprintf(msg,CUTOFF_LENGTH-1,"Hashing: %s%s", my_filename, BLANK_LINE);
-    fprintf(stderr,"%s\r", msg);
-
-    if (fn_length > CUTOFF_LENGTH)
-      free(my_filename);
-  }
-
-  ss_compute(handle,sum);
-  prepare_filename(s,fn);
-
-  if (MODE(mode_match_pretty))
-  {
-    if (match_add(s,fn,sum))
-      print_error(s,fn,"Unable to add hash to set of known hashes");
-  }
-  else if (MODE(mode_match) || MODE(mode_directory))
-  {
-    match_compare(s,fn,sum);
-
-    if (MODE(mode_directory))
-      if (match_add(s,fn,sum))
-	print_error(s,fn,"Unable to add hash to set of known hashes");
-  }
-  else
-  {
-    if (s->first_file_processed)
-    {
-      printf ("%s%s", OUTPUT_FILE_HEADER,NEWLINE);
-      s->first_file_processed = FALSE;
-    }
-    printf ("%s,\"%s\"%s", sum, fn, NEWLINE);
-  }
-
-  fclose(handle);
-  free(sum);
-  free(msg);
-  return FALSE;
-}
 
 
 
