@@ -20,6 +20,8 @@
 	* Brought over code to support Unicode from Miss Identify
 
 	* Version bump to 2.0 beta1
+
+	* Added sample program to demonstrate API features
 	
 
 2008-02-15 Jesse Kornblum <research@jessekornblum.com>

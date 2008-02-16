@@ -33,10 +33,8 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#ifdef HAVE_INTTYPES_H
-# include <inttypes.h>
-#endif
+#include <ctype.h>
+#include <inttypes.h>
 
 #ifdef HAVE_DIRENT_H
 # include <dirent.h>
@@ -173,8 +171,8 @@ int done_processing_dir(TCHAR *fn);
 int processing_dir(TCHAR *fn);
 int have_processed_dir(TCHAR *fn);
 
-int process(state *s, TCHAR *fn);
-
+int process_win32(state *s, TCHAR *fn);
+int process_normal(state *s, TCHAR *fn);
 
 // *********************************************************************
 // Fuzzy Hashing Engine
@@ -225,6 +223,8 @@ void display_filename(FILE *out, TCHAR *fn);
 // *********************************************************************
 // Matching functions
 // *********************************************************************
+
+int match_init(state *s);
 
 // See if the existing file and hash are in the set of known hashes
 int match_compare(state *s, TCHAR *fn, char *sum);

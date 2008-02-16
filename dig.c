@@ -345,48 +345,46 @@ static int file_type(state *s, TCHAR *fn)
 }
 
 
-static int should_hash_symlink(state *s, TCHAR *fn, int *link_type);
+#ifndef _WIN32
+static int should_hash_symlink(state *s, TCHAR *fn, int *link_type)
+{
+  int type;
+  _tstat_t sb;
+
+  /* We must look at what this symlink points to before we process it.
+      The normal file_type function uses lstat to examine the file,
+      we use stat to examine what this symlink points to. */
+  if (_sstat(fn,&sb))
+    {
+      print_error_unicode(s,fn,"%s",strerror(errno));
+      return FALSE;
+    }
+
+  type = file_type_helper(sb);
+
+  if (type == file_directory)
+    {
+      if (s->mode & mode_recursive)
+	process_dir(s,fn);
+      else
+	{
+	  print_error_unicode(s,fn,"Is a directory");
+	}
+      return FALSE;
+    }    
+
+  if (link_type != NULL)
+    *link_type = type;
+  return TRUE;    
+}
+#endif
+
 
 #define RETURN_IF_MODE(A) \
 if (s->mode & A) \
   return TRUE; \
 break;
 
-
-
-
-static int should_hash_symlink(state *s, TCHAR *fn, int *link_type)
-{
-  int type;
-  _tstat_t sb;
-
-   /* We must look at what this symlink points to before we process it.
-      The normal file_type function uses lstat to examine the file,
-      we use stat to examine what this symlink points to. */
-  if (_sstat(fn,&sb))
-  {
-    print_error_unicode(s,fn,"%s",strerror(errno));
-    return FALSE;
-  }
-
-  type = file_type_helper(sb);
-
-  if (type == file_directory)
-  {
-    if (s->mode & mode_recursive)
-      process_dir(s,fn);
-    else
-    {
-      print_error_unicode(s,fn,"Is a directory");
-    }
-    return FALSE;
-  }    
-
-  if (link_type != NULL)
-    *link_type = type;
-  return TRUE;    
-}
-    
 
 
 

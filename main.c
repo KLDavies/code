@@ -5,11 +5,8 @@
 
 static int initialize_state(state *s)
 {
-  s->known_hashes = (lsh_list *)malloc(sizeof(lsh_list));
-  if (s->known_hashes == NULL)
+  if (match_init(s))
     return TRUE;
-  
-  lsh_list_init(s->known_hashes);  
 
   s->first_file_processed = TRUE;
   s->mode                 = mode_none;

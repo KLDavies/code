@@ -58,7 +58,6 @@ int hash_file(state *s, TCHAR *fn)
       free(my_filename);
   }
 
-
   fuzzy_hash_file(handle,sum);
   prepare_filename(s,fn);
 
@@ -82,7 +81,9 @@ int hash_file(state *s, TCHAR *fn)
       printf ("%s%s", OUTPUT_FILE_HEADER,NEWLINE);
       s->first_file_processed = FALSE;
     }
-    printf ("%s,\"%s\"%s", sum, fn, NEWLINE);
+    printf ("%s,\"", sum);
+    display_filename(stdout,fn);
+    print_status("\"");
   }
 
   fclose(handle);

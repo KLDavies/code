@@ -32,15 +32,21 @@ done
 AC_C_BIGENDIAN
 
 AC_CHECK_HEADERS([libgen.h])
-# fcntl.h will be added if/when we use AFF
-#AC_CHECK_HEADERS([fcntl.h])
 AC_CHECK_HEADERS([dirent.h])
 AC_CHECK_HEADERS([inttypes.h])
 
-#AC_CHECK_HEADERS([ctype.h])
-#AC_CHECK_HEADERS([errno.h])
-#AC_CHECK_HEADERS([limits.h])
-#AC_CHECK_HEADERS([stdarg.h])
+AC_CHECK_HEADERS([sys/types.h sys/ioctl.h sys/param.h wchar.h unistd.h sys/stat.h sys/disk.h])
+
+AC_CHECK_HEADER([inttypes.h],,AC_MSG_ERROR([You must have inttypes.h or some other C99 equivalent]),)
+
+# These includes are required on FreeBSD
+AC_CHECK_HEADERS([sys/mount.h],[],[],
+[#ifdef HAVE_SYS_TYPES_H
+ # include <sys/types.h>
+ #endif
+ #ifdef HAVE_SYS_PARAM_H                                                     
+ # include <sys/param.h>                           
+ #endif])                 
 
 AC_FUNC_FSEEKO
 

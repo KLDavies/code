@@ -36,6 +36,19 @@ int lsh_list_init(lsh_list *l)
   return FALSE;
 }
 
+
+int match_init(state *s)
+{
+  s->known_hashes = (lsh_list *)malloc(sizeof(lsh_list));
+  if (s->known_hashes == NULL)
+    return TRUE;
+  
+  lsh_list_init(s->known_hashes);  
+  return FALSE;
+}
+
+
+
 #define STRINGS_EQUAL(A,B)    !_tcsncmp(A,B,MAX(_tcslen(A),_tcslen(B)))
 
 int match_compare(state *s, TCHAR *fn, char *sum)
