@@ -3,7 +3,8 @@
 	* Removed block_size value from state variable. 
 	  Nobody was using it.
 
-	* Appended API functions to hash file or buffer.
+	* Ammended API functions to support hashing either a buffer
+	  or an open file handle
 
 	* Moved ssdeep code into engine.c, moved fuzzy hashing
 	  code into fuzzy.c. This will help us create libfuzzy
@@ -15,6 +16,10 @@
 
 	* Moved definition of __progname to ssdeep.h. It's not being
 	  used by the fuzzy hashing library and caused problems on OS X.
+
+	* Brought over code to support Unicode from Miss Identify
+
+	* Version bump to 2.0 beta1
 	
 
 2008-02-15 Jesse Kornblum <research@jessekornblum.com>
