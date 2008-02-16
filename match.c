@@ -148,8 +148,6 @@ int match_add(state *s, TCHAR *fn, char *hash)
 }
 
 
-/* RBF - We have to convert the Unicode line we read into
-   a Unicode filename AND a non-Unicode hash */
 int match_load(state *s, char *fn)
 {
   TCHAR *str, *known_file_name;
