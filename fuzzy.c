@@ -493,17 +493,17 @@ uint32_t spamsum_match(state *s, const char *str1, const char *str2)
     score1 = score_strings(s1_1, s2_1, block_size1);
     score2 = score_strings(s1_2, s2_2, block_size2);
 
-    s->block_size = block_size1;
+    //    s->block_size = block_size1;
 
     score = MAX(score1, score2);
   } else if (block_size1 == block_size2*2) {
 
     score = score_strings(s1_1, s2_2, block_size1);
-    s->block_size = block_size1;
+    //    s->block_size = block_size1;
   } else {
 
     score = score_strings(s1_2, s2_1, block_size2);
-    s->block_size = block_size2;
+    //    s->block_size = block_size2;
   }
   
   free(s1);

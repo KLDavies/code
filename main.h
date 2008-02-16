@@ -70,7 +70,7 @@ typedef struct {
   lsh_list  *known_hashes;
 
   // These are used when computing where matched files are different
-  uint32_t  block_size;
+  //  uint32_t  block_size;
 
   uint8_t  threshold;
 

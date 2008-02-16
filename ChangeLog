@@ -1,3 +1,11 @@
+2008-02-16 Jesse Kornblum <research@jessekornblum.com>
+
+	* Removed block_size value from state variable. 
+	  Nobody was using it.
+
+	* Appended API functions to hash file or buffer.
+	
+
 2008-02-15 Jesse Kornblum <research@jessekornblum.com>
 
 	* Changing Win32 build to create DLL. All other

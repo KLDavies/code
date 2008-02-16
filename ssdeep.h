@@ -10,6 +10,12 @@ extern int ssdeep_compute(unsigned char *buf,
 			  uint32_t      *block_size, 
 			  char          *result);
 
+/* Works like the above, but hashes a file instead of a buffer. */
+extern int ssdeep_compute(TCHAR *fn,
+			  uint32_t      *block_size, 
+			  char          *result);
+
+
 /* Returns a value from 0 to 100 indicating the match score of the 
    two signatures. A match score of zero indicates the sigantures
    did not match. */
