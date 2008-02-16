@@ -125,7 +125,7 @@ static void ss_destroy(ss_context *ctx)
 
 static int ss_init(ss_context *ctx, FILE *handle)
 {
-  ctx->ret = (char *)malloc(sizeof(char) * MAX_RESULT);
+  ctx->ret = (char *)malloc(sizeof(char) * FUZZY_MAX_RESULT);
   if (ctx->ret == NULL)
     return TRUE;
 
@@ -235,8 +235,9 @@ int fuzzy_hash_file(FILE *handle,
 		    uint32_t *block_size,
 		    char *result)
 {
-  int done = FALSE;
-  ss_context *ctx = (ss_context *)malloc(sizeof(ss_context));
+  uint64_t filepos = ftello(handle);
+  int done         = FALSE;
+  ss_context *ctx  = (ss_context *)malloc(sizeof(ss_context));
   
   if (ctx == NULL)
     return TRUE;
@@ -257,7 +258,11 @@ int fuzzy_hash_file(FILE *handle,
       done = TRUE;
   }
 
-  strncpy(result,ctx->ret,MAX_RESULT);
+  strncpy(result,ctx->ret,FUZZY_MAX_RESULT);
+
+  /* RBF - What do we do in this case? We have a valid result,
+     but we can't return the file pointer to its original position. */
+  fseeko(handle,filepos,SEEK_SET);
 
   ss_destroy(ctx);
 

@@ -9,7 +9,7 @@
 
 /* Compute the fuzzy hash of buf. The resulting block size is stored in 
    block_size. The full result, including the blocksize, is returned in 
-   the string result. Result MUST be allocated to hold up to 128 
+   the string result. Result MUST be allocated to hold up to FUZZY_MAX_RESULT
    characters. It is the user's responsibility to append the filename,
    if any, to result after computation. */
 extern int fuzzy_hash_buf(unsigned char *buf,
@@ -34,4 +34,4 @@ extern int fuzzy_compare(char *sig1, char *sig2);
 
 // the output is a string of length 64 in base64
 #define SPAMSUM_LENGTH 64
-#define MAX_RESULT    (SPAMSUM_LENGTH + (SPAMSUM_LENGTH/2 + 20))
+#define FUZZY_MAX_RESULT    (SPAMSUM_LENGTH + (SPAMSUM_LENGTH/2 + 20))

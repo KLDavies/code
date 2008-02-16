@@ -20,7 +20,7 @@ int hash_file(state *s, char *fn)
     return TRUE;
   }
  
-  if ((sum = (char *)malloc(sizeof(char) * MAX_RESULT)) == NULL)
+  if ((sum = (char *)malloc(sizeof(char) * FUZZY_MAX_RESULT)) == NULL)
   {
     fclose(handle);
     print_error(s,fn,"out of memory");
