@@ -40,11 +40,51 @@
 # include <dirent.h>
 #endif
 
-#ifdef __LINUX
-// These are used to find file sizes of block devices. See helpers.c
-#include <sys/ioctl.h>
-#include <sys/mount.h>
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
 #endif
+
+#ifdef HAVE_SYS_TYPES_H
+# include <sys/types.h>
+#endif
+
+#ifdef HAVE_SYS_PARAM_H
+# include <sys/param.h>
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
+
+#ifdef HAVE_SYS_IOCTL_H
+# include <sys/ioctl.h>
+#endif
+
+#ifdef HAVE_SYS_MOUNT_H
+# include <sys/mount.h>
+#endif 
+
+#ifdef HAVE_SYS_DISK_H
+# include <sys/disk.h>
+#endif
+
+#ifdef HAVE_LIBGEN_H
+# include <libgen.h>
+#endif
+
+/* This allows us to open standard input in binary mode by default 
+   See http://gnuwin32.sourceforge.net/compile.html for more */
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
+
 
 #include "fuzzy.h"
 #include "tchar-local.h"

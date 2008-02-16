@@ -35,7 +35,7 @@ AC_CHECK_HEADERS([libgen.h])
 AC_CHECK_HEADERS([dirent.h])
 AC_CHECK_HEADERS([inttypes.h])
 
-AC_CHECK_HEADERS([sys/types.h sys/ioctl.h sys/param.h wchar.h unistd.h sys/stat.h sys/disk.h])
+AC_CHECK_HEADERS([fcntl.h sys/types.h sys/ioctl.h sys/param.h wchar.h unistd.h sys/stat.h sys/disk.h])
 
 AC_CHECK_HEADER([inttypes.h],,AC_MSG_ERROR([You must have inttypes.h or some other C99 equivalent]),)
 
