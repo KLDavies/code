@@ -2,8 +2,6 @@
 /* Fuzzy Hashing by Jesse Kornblum
    Copyright (C) 2008 ManTech International Corporation
 
-   $Id$
-
    This program demonstrates some of the capabilities of 
    the fuzzy hashing library.
    
@@ -22,8 +20,9 @@
    SOFTWARE COULD LEAD DIRECTLY TO DEATH, PERSONAL INJURY, OR SEVERE
    PHYSICAL OR ENVIRONMENTAL DAMAGE ("HIGH RISK ACTIVITIES").  THE AUTHOR
    SPECIFICALLY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTY OF FITNESS FOR
-   HIGH RISK ACTIVITIES.
-*/
+   HIGH RISK ACTIVITIES.   */
+
+/* $Id$ */
 
 #include <stdio.h>
 #include <stdlib.h>
