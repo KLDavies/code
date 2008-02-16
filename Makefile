@@ -32,13 +32,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-<<<<<<< .mine
-build_triplet = i386-pc-solaris2.11
-host_triplet = i386-pc-solaris2.11
-=======
 build_triplet = powerpc-apple-darwin8.11.0
 host_triplet = powerpc-apple-darwin8.11.0
->>>>>>> .r25
 bin_PROGRAMS = ssdeep$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
@@ -112,17 +107,6 @@ DIST_ARCHIVES = $(distdir).tar.gz
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
-<<<<<<< .mine
-ACLOCAL = ${SHELL} /export/home/jessek/ssdeep/missing --run aclocal-1.10
-AMTAR = ${SHELL} /export/home/jessek/ssdeep/missing --run tar
-AR = ar
-AS = as
-AUTOCONF = ${SHELL} /export/home/jessek/ssdeep/missing --run autoconf
-AUTOHEADER = ${SHELL} /export/home/jessek/ssdeep/missing --run autoheader
-AUTOMAKE = ${SHELL} /export/home/jessek/ssdeep/missing --run automake-1.10
-AWK = gawk
-CC = gcc
-=======
 ACLOCAL = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run aclocal-1.10
 AMTAR = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run tar
 AR = ar
@@ -132,91 +116,57 @@ AUTOHEADER = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssde
 AUTOMAKE = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run automake-1.10
 AWK = awk
 CC = gcc
->>>>>>> .r25
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
-<<<<<<< .mine
-CPP = gcc -E
-CPPFLAGS = 
-CXX = g++
-CXXCPP = g++ -E
-=======
 CPP = gcc -E
 CPPFLAGS = -I/usr/local/include 
 CXX = g++
 CXXCPP = g++ -E
->>>>>>> .r25
 CXXDEPMODE = depmode=gcc3
 CXXFLAGS = -g -O2
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
 DLLTOOL = dlltool
+DSYMUTIL = @DSYMUTIL@
 ECHO = echo
 ECHO_C = 
 ECHO_N = -n
 ECHO_T = 
-<<<<<<< .mine
-EGREP = /usr/bin/ggrep -E
-EXEEXT = 
-F77 = f77
-FFLAGS = -g
-GREP = /usr/bin/ggrep
-INSTALL = /opt/sfw/bin/install -c
-=======
 EGREP = /usr/bin/grep -E
 EXEEXT = 
 F77 = 
 FFLAGS = 
 GREP = /usr/bin/grep
 INSTALL = /usr/bin/install -c
->>>>>>> .r25
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-LDFLAGS = 
+LDFLAGS = -L/usr/local/lib 
 LIBOBJS = 
 LIBS = 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LN_S = ln -s
 LTLIBOBJS = 
-<<<<<<< .mine
-MAKEINFO = ${SHELL} /export/home/jessek/ssdeep/missing --run makeinfo
-MKDIR_P = /opt/sfw/bin/mkdir -p
-OBJDUMP = objdump
-=======
 MAKEINFO = ${SHELL} /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/missing --run makeinfo
 MKDIR_P = ./install-sh -c -d
+NMEDIT = @NMEDIT@
 OBJDUMP = objdump
->>>>>>> .r25
 OBJEXT = o
 PACKAGE = ssdeep
 PACKAGE_BUGREPORT = research@jessekornblum.com
 PACKAGE_NAME = SSDEEP
-PACKAGE_STRING = SSDEEP 1.2
+PACKAGE_STRING = SSDEEP 2.0-beta1
 PACKAGE_TARNAME = ssdeep
-PACKAGE_VERSION = 1.2
+PACKAGE_VERSION = 2.0-beta1
 PATH_SEPARATOR = :
 RANLIB = ranlib
+SED = @SED@
 SET_MAKE = 
-<<<<<<< .mine
-SHELL = /bin/bash
-STRIP = strip
-=======
 SHELL = /bin/sh
 STRIP = strip
->>>>>>> .r25
-VERSION = 1.2
-<<<<<<< .mine
-abs_builddir = /export/home/jessek/ssdeep
-abs_srcdir = /export/home/jessek/ssdeep
-abs_top_builddir = /export/home/jessek/ssdeep
-abs_top_srcdir = /export/home/jessek/ssdeep
-ac_ct_CC = gcc
-ac_ct_CXX = g++
-ac_ct_F77 = f77
-=======
+VERSION = 2.0-beta1
 abs_builddir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
 abs_srcdir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
 abs_top_builddir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
@@ -224,47 +174,38 @@ abs_top_srcdir = /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 ac_ct_F77 = 
->>>>>>> .r25
 am__include = include
 am__leading_dot = .
 am__quote = 
 am__tar = ${AMTAR} chof - "$$tardir"
 am__untar = ${AMTAR} xf -
 bindir = ${exec_prefix}/bin
-build = i386-pc-solaris2.11
+build = powerpc-apple-darwin8.11.0
 build_alias = 
-build_cpu = i386
-build_os = solaris2.11
-build_vendor = pc
+build_cpu = powerpc
+build_os = darwin8.11.0
+build_vendor = apple
 builddir = .
 datadir = ${datarootdir}
 datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
-<<<<<<< .mine
-host = i386-pc-solaris2.11
-host_alias = 
-host_cpu = i386
-host_os = solaris2.11
-host_vendor = pc
-=======
 host = powerpc-apple-darwin8.11.0
 host_alias = 
 host_cpu = powerpc
 host_os = darwin8.11.0
 host_vendor = apple
->>>>>>> .r25
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = $(SHELL) /export/home/jessek/ssdeep/install-sh
+install_sh = $(SHELL) /Users/jessekornblum/Documents/research/fuzzy-hashing/ssdeep/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
 mandir = ${datarootdir}/man
-mkdir_p = /opt/sfw/bin/mkdir -p
+mkdir_p = $(top_builddir)/./install-sh -c -d
 oldincludedir = /usr/include
 pdfdir = ${docdir}
 prefix = /usr/local
