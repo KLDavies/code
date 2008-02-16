@@ -34,8 +34,6 @@ off_t find_file_size(FILE *f)
 #if defined(_IO) && defined(BLKGETSIZE)
     if (ioctl(fd, BLKGETSIZE, &num_sectors))
     {
-      print_debug("%s: ioctl BLKGETSIZE failed: %s", 
-		  __progname, strerror(errno));
       return 0;
     }
 #else
@@ -47,8 +45,6 @@ off_t find_file_size(FILE *f)
 #if defined(_IO) && defined(BLKSSZGET)
     if (ioctl(fd, BLKSSZGET, &sector_size))
     {
-      print_debug("%s: ioctl BLKSSZGET failed: %s",
-		  __progname, strerror(errno));		  
       return 0;
     }
     if (0 == sector_size)
@@ -81,7 +77,6 @@ off_t find_file_size(FILE *f) {
 
   if (fstat(fd, &info))
   {
-    print_status("%s: %s", __progname,strerror(errno));
     return 0;
   }
 
@@ -97,16 +92,12 @@ off_t find_file_size(FILE *f) {
     /* Get the block size */
     if (ioctl(fd, DKIOCGETBLOCKSIZE,&blocksize) < 0) 
     {
-      print_debug("%s: ioctl DKIOCGETBLOCKSIZE failed: %s", 
-		  __progname, strerror(errno));
       return 0;
     } 
     
     /* Get the number of blocks */
     if (ioctl(fd, DKIOCGETBLOCKCOUNT, &blockcount) < 0) 
     {
-      print_debug("%s: ioctl DKIOCGETBLOCKCOUNT failed: %s", 
-		  __progname, strerror(errno));
     }
 
     total = blocksize * blockcount;
