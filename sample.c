@@ -4,7 +4,9 @@
 
    $Id$
 
-   This program demonstrates some of the capabilities of the fuzzy hashing library.
+   This program demonstrates some of the capabilities of 
+   the fuzzy hashing library.
+   
    To compile the program:
 
    gcc -Wall -I/usr/local/include -L/usr/local/lib sample.c -Lfuzzy
@@ -29,7 +31,7 @@
 
 #include <fuzzy.h>
 
-#define FILENAME FILENAME
+#define FILENAME "foo.dat" 
 #define SIZE 0x50000
 
 
@@ -61,6 +63,7 @@ int main(int argc, char **argv)
   uint32_t i;
   unsigned char * buf;
   char * result;
+  FILE *handle; 
 
   srand(1);
 
@@ -68,13 +71,13 @@ int main(int argc, char **argv)
   result = (char *)malloc(FUZZY_MAX_RESULT);
   if (NULL == result || NULL == buf)
     {
-      fprintf (stderr,"%s: Out of memory\n");
+      fprintf (stderr,"%s: Out of memory\n",argv[0]);
       return -1;
     }
 
   generate_random(buf,SIZE);
 
-  if (write_data(buf,FILENAME))
+  if (write_data(buf,SIZE,FILENAME))
     return EXIT_FAILURE;
 
   printf ("Hashing buffer\n");
