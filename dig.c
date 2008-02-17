@@ -218,9 +218,7 @@ static void clean_name(state *s, TCHAR *fn)
      functions are necessary in *nix so that we can clean up the 
      path names without removing the names of symbolic links. They
      are also called when the user has specified an absolute path
-     but has included extra double dots or such.
-
-     TODO: See if Windows Vista's symbolic links create problems */
+     but has included extra double dots or such. */
 
   if (!(s->mode & mode_relative))
   {

@@ -211,9 +211,6 @@ off_t find_file_size(FILE *f)
   /* Windows does not support running fstat on block devices,
      so there's no point in mucking about with them.
 
-     TODO: Find a way to estimate device sizes on Windows
-     Perhaps an IOTCL_DISK_GET_DRIVE_GEOMETRY_EX would work? */
-
   if ((fseeko(f,0,SEEK_END)))
     return 0;
 
