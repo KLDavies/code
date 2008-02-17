@@ -222,11 +222,13 @@ libfuzzy_la_SOURCES = fuzzy.c edit_dist.c find-file-size.c
 libfuzzy_la_LDFLAGS = -no-undefined -version-info 2:0:0
 include_HEADERS = fuzzy.h
 man_MANS = ssdeep.1
-ssdeep_SOURCES = main.c match.c engine.c         \
-                 dig.c cycles.c helpers.c ui.c   \
+ssdeep_SOURCES = main.c match.c engine.c                 \
+                 dig.c cycles.c helpers.c ui.c           \
                  main.h fuzzy.h tchar-local.h ssdeep.h
 
+CLEANFILES = fuzzy.dll fuzzy.def
 EXTRA_DIST = config.guess config.sub sample.c
+WINDOWSDOCS = README.TXT API.TXT
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -652,6 +654,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -747,11 +750,41 @@ uninstall-man: uninstall-man1
 	uninstall-man uninstall-man1
 
 
+dll: $(libfuzzy_la_SOURCES)
+	$(CC) $(CFLAGS) -shared -o fuzzy.dll $(libfuzzy_la_SOURCES) \
+        -Wl,--output-def,fuzzy.def,--out-implib,libfuzzy.a
+	$(STRIP) fuzzy.dll 
+
 nice:
 	rm -f *~
 
 preflight:
 	@grep RBF $(DISTFILES)
+
+README.TXT: ssdeep.1
+	man ./ssdeep.1 | col -bx > README.TXT
+
+API.TXT: README
+	cp README API.TXT
+
+win-docs: $(WINDOWSDOCS)
+	flip -d $(WINDOWSDOCS)
+#	unix2dos $(WINDOWSDOCS)
+
+win-package: win-docs
+	rm -rf $(distdir).zip $(distdir)
+	./configure --host=mingw32
+	make
+	make dll
+	$(STRIP) ssdeep.exe
+	mkdir $(distdir)
+	cp $(WINDOWSDOCS) ssdeep.exe fuzzy.dll fuzzy.def $(distdir)
+	zip -r9 $(distdir).zip $(distdir)
+	rm -rf $(distdir) $(WINDOWSDOCS)
+
+world: distclean
+	make win-package
+	make dist
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

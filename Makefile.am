@@ -12,9 +12,16 @@ include_HEADERS=fuzzy.h
 
 man_MANS=ssdeep.1
 
-ssdeep_SOURCES = main.c match.c engine.c         \
-                 dig.c cycles.c helpers.c ui.c   \
+ssdeep_SOURCES = main.c match.c engine.c                 \
+                 dig.c cycles.c helpers.c ui.c           \
                  main.h fuzzy.h tchar-local.h ssdeep.h
+
+dll: $(libfuzzy_la_SOURCES)
+	$(CC) $(CFLAGS) -shared -o fuzzy.dll $(libfuzzy_la_SOURCES) \
+        -Wl,--output-def,fuzzy.def,--out-implib,libfuzzy.a
+	$(STRIP) fuzzy.dll 
+
+CLEANFILES=fuzzy.dll fuzzy.def
 
 EXTRA_DIST=config.guess config.sub sample.c
 
@@ -23,3 +30,30 @@ nice:
 
 preflight:
 	@grep RBF $(DISTFILES)
+
+WINDOWSDOCS=README.TXT API.TXT
+
+README.TXT: ssdeep.1
+	man ./ssdeep.1 | col -bx > README.TXT
+
+API.TXT: README
+	cp README API.TXT
+
+win-docs: $(WINDOWSDOCS)
+	flip -d $(WINDOWSDOCS)
+#	unix2dos $(WINDOWSDOCS)
+
+win-package: win-docs
+	rm -rf $(distdir).zip $(distdir)
+	./configure --host=mingw32
+	make
+	make dll
+	$(STRIP) ssdeep.exe
+	mkdir $(distdir)
+	cp $(WINDOWSDOCS) ssdeep.exe fuzzy.dll fuzzy.def $(distdir)
+	zip -r9 $(distdir).zip $(distdir)
+	rm -rf $(distdir) $(WINDOWSDOCS)
+
+world: distclean
+	make win-package
+	make dist

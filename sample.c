@@ -5,9 +5,22 @@
    This program demonstrates some of the capabilities of 
    the fuzzy hashing library.
    
-   To compile the program:
+   To compile the program using gcc:
 
-   gcc -Wall -I/usr/local/include -L/usr/local/lib sample.c -Lfuzzy
+   $ gcc -Wall -I/usr/local/include -L/usr/local/lib sample.c -Lfuzzy
+
+   Using mingw:
+
+   C:\> gcc -Wall -Ic:\path\to\includes sample.c fuzzy.dll
+
+   Using Microsoft Visual C:
+
+   C:\> lib /machine:i386 /def:fuzzy.def
+   C:\> cl sample.c fuzzy.lib
+
+   See the README that came with this file for more details on using
+   the library on Windows systems with Microsoft Visual C. 
+
 
    The functions generate_random and write_data are generic routines to make
    random data for hashing. The real magic happens in the main() function.
@@ -59,7 +72,6 @@ int write_data(unsigned char *buf, uint32_t sz, char *fn)
 
 int main(int argc, char **argv)
 {
-  uint32_t i;
   unsigned char * buf;
   char * result;
   FILE *handle; 

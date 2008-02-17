@@ -1,3 +1,19 @@
 
 A sample program that uses the API is in sample.c.
 
+More documentation on how to build and use DLLs with Microsoft Visual C
+(MSVC) can found at:
+http://www.mingw.org/mingwfaq.shtml#faq-msvcdll
+
+
+** How can an MSVC program call a MinGW DLL, and vice versa?
+
+Assume we have a testdll.h, testdll.c, and testmain.c. In the first case, we will compile testdll.c with MinGW, and let the MSVC-compiled testmain call it. You should use
+gcc -shared -o testdll.dll testdll.c \
+    -Wl,--output-def,testdll.def,--out-implib,libtestdll.a
+
+to produce the DLL and DEF files. MSVC cannot use the MinGW library, but since you have already the DEF file you may easily produce one by the Microsoft LIB tool: lib /machine:i386 /def:testdll.def
+
+Once you have testdll.lib, it is trivial to produce the executable with MSVC:
+cl testmain.c testdll.lib
+
