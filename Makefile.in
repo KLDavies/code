@@ -783,6 +783,7 @@ win-package: win-docs
 	rm -rf $(distdir) $(WINDOWSDOCS)
 
 world: distclean
+	./configure --host=mingw32
 	make win-package
 	make dist
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
