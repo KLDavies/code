@@ -209,7 +209,7 @@ off_t find_file_size(FILE *f)
   off_t total = 0, original = ftello(f);
   
   /* Windows does not support running fstat on block devices,
-     so there's no point in mucking about with them.
+     so there's no point in mucking about with them. */
 
   if ((fseeko(f,0,SEEK_END)))
     return 0;

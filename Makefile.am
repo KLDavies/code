@@ -6,7 +6,7 @@ ssdeep_LDFLAGS=-static
 
 lib_LTLIBRARIES=libfuzzy.la
 libfuzzy_la_SOURCES=fuzzy.c edit_dist.c find-file-size.c
-libfuzzy_la_LDFLAGS=-no-undefined -version-info 0:0:0
+libfuzzy_la_LDFLAGS=-no-undefined -version-info 2:0:0
 
 include_HEADERS=fuzzy.h
 

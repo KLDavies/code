@@ -1,5 +1,12 @@
 
-/* $Id$ */
+/* Fuzzy Hashing by Jesse Kornblum
+   Copyright (C) 2008 ManTech International Corporation
+
+   $Id: main.c 33 2008-02-16 18:37:47Z jessekornblum 
+
+   This program is licensed under version 2 of the GNU Public License.
+   See the file COPYING for details.  */
+
 
 #include "ssdeep.h"
 
@@ -19,28 +26,23 @@ static int initialize_state(state *s)
 
 static void usage(void)
 {
-  printf ("%s version %s by Jesse Kornblum%s", __progname, VERSION, NEWLINE);
-  printf ("Copyright (C) 2006 ManTech International Corporation%s", NEWLINE);
-  printf ("Usage: %s [-V|h] [-m file] [-vprdsblc] [-t val] [FILES]%s%s", 
-	  __progname, NEWLINE, NEWLINE);
+  print_status ("%s version %s by Jesse Kornblum", __progname, VERSION);
+  print_status ("Usage: %s [-V|h] [-m file] [-vprdsblc] [-t val] [FILES]", 
+	  __progname);
 
-  printf ("-v - Verbose mode.%s", NEWLINE);
-  printf ("-p - Pretty matching mode. Similar to -d but includes all matches%s", NEWLINE);
-  printf ("-r - Recursive mode%s", NEWLINE);
-  printf ("-d - Directory mode, compare all files in a directory%s", NEWLINE);
-  printf ("-s - Silent mode; all errors are supressed%s", NEWLINE);
-  printf ("-b - Uses only the bare name of files; all path information omitted%s", NEWLINE);
-  printf ("-l - Uses relative paths for filenames%s", NEWLINE);
-  printf ("-c - Prints output in CSV format%s", NEWLINE);
-  printf ("-t - Only displays matches above the given threshold%s", NEWLINE);
-  printf ("-m - Match FILES against known hashes in file%s", NEWLINE);
-  printf ("-h - Display this help message%s", NEWLINE);
-  printf ("-V - Display version number and exit%s", NEWLINE);
+  print_status ("-v - Verbose mode.");
+  print_status ("-p - Pretty matching mode. Similar to -d but includes all matches");
+  print_status ("-r - Recursive mode");
+  print_status ("-d - Directory mode, compare all files in a directory");
+  print_status ("-s - Silent mode; all errors are supressed");
+  print_status ("-b - Uses only the bare name of files; all path information omitted");
+  print_status ("-l - Uses relative paths for filenames");
+  print_status ("-c - Prints output in CSV format");
+  print_status ("-t - Only displays matches above the given threshold");
+  print_status ("-m - Match FILES against known hashes in file");
+  print_status ("-h - Display this help message");
+  print_status ("-V - Display version number and exit");
 }
-
-
-
-
 
 
 static void process_cmd_line(state *s, int argc, char **argv)
@@ -100,7 +102,7 @@ static void process_cmd_line(state *s, int argc, char **argv)
       exit (EXIT_SUCCESS);
       
     case 'V':
-      printf ("%s%s", VERSION, NEWLINE);
+      print_status ("%s", VERSION);
       exit (EXIT_SUCCESS);
       
     default:
@@ -156,7 +158,7 @@ static int is_absolute_path(TCHAR *fn)
 
 
 
-void generate_filename(state *s, TCHAR *fn, TCHAR *cwd, TCHAR *input)
+static void generate_filename(state *s, TCHAR *fn, TCHAR *cwd, TCHAR *input)
 {
   if (NULL == fn || NULL == input)
     internal_error("Error calling generate_filename");
@@ -181,10 +183,6 @@ void generate_filename(state *s, TCHAR *fn, TCHAR *cwd, TCHAR *input)
 #endif
     }
 }
-
-
-
-
 
 
 int main(int argc, char **argv)
@@ -234,21 +232,19 @@ int main(int argc, char **argv)
       while (count < s->argc)
 	{  
 	  generate_filename(s,fn,cwd,s->argv[count]);
-
+	  
 #ifdef _WIN32
 	  status = process_win32(s,fn);
 #else
 	  status = process_normal(s,fn);
 #endif
-
+	  
 	  ++count;
 	}
-
+      
       free(fn);
       free(cwd);
     }
-
-
 
   return (EXIT_SUCCESS);
 }
