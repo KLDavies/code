@@ -22,4 +22,4 @@ nice:
 	rm -f *~
 
 preflight:
-	grep RBF $(DISTFILES)
+	@grep RBF $(DISTFILES)
