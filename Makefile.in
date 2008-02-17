@@ -755,12 +755,6 @@ dll: $(libfuzzy_la_SOURCES)
         -Wl,--output-def,fuzzy.def,--out-implib,libfuzzy.a
 	$(STRIP) fuzzy.dll 
 
-nice:
-	rm -f *~
-
-preflight:
-	@grep RBF $(DISTFILES)
-
 README.TXT: ssdeep.1
 	man ./ssdeep.1 | col -bx > README.TXT
 
@@ -786,6 +780,15 @@ world: distclean
 	./configure --host=mingw32
 	make win-package
 	make dist
+
+# Only generic routines go below this line
+# ------------------------------------------------------------------
+
+nice:
+	rm -f *~
+
+preflight:
+	@grep RBF $(DISTFILES)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

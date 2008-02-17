@@ -25,12 +25,6 @@ CLEANFILES=fuzzy.dll fuzzy.def
 
 EXTRA_DIST=config.guess config.sub sample.c
 
-nice:
-	rm -f *~
-
-preflight:
-	@grep RBF $(DISTFILES)
-
 WINDOWSDOCS=README.TXT API.TXT
 
 README.TXT: ssdeep.1
@@ -58,3 +52,14 @@ world: distclean
 	./configure --host=mingw32
 	make win-package
 	make dist
+
+
+# Only generic routines go below this line
+# ------------------------------------------------------------------
+
+nice:
+	rm -f *~
+
+preflight:
+	@grep RBF $(DISTFILES)
+

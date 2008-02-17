@@ -24,13 +24,17 @@ static int initialize_state(state *s)
 }
 
 
+/* In order to fit on one Win32 screen this function should produce
+   no more than 22 lines of output. */
 static void usage(void)
 {
   print_status ("%s version %s by Jesse Kornblum", __progname, VERSION);
+  print_status ("Copyright (C) 2008 ManTech International Corporation");
+  print_status ("");
   print_status ("Usage: %s [-V|h] [-m file] [-vprdsblc] [-t val] [FILES]", 
 	  __progname);
 
-  print_status ("-v - Verbose mode.");
+  print_status ("-v - Verbose mode. Displays filename as its being processed");
   print_status ("-p - Pretty matching mode. Similar to -d but includes all matches");
   print_status ("-r - Recursive mode");
   print_status ("-d - Directory mode, compare all files in a directory");
@@ -54,8 +58,8 @@ static void process_cmd_line(state *s, int argc, char **argv)
     case 'v': 
       if (MODE(mode_verbose))
       {
-	print_error(s,NULL,"Already at maximum verbosity");
-	print_error(s,NULL,"Error message display to user correctly");
+	print_error(s,"%s: Already at maximum verbosity", __progname);
+	print_error(s,"%s: Error message display to user correctly", __progname);
       }
       else
 	s->mode |= mode_verbose;
@@ -196,7 +200,6 @@ int main(int argc, char **argv)
 #endif
 
   s = (state *)malloc(sizeof(state));
-  // We can't use fatal_error because it requires a valid state
   if (NULL == s)
     fatal_error("%s: Unable to allocate state variable", __progname);
 

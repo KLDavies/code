@@ -1,4 +1,11 @@
 
+**** FUZZY HASHING API ****
+
+This file documents the fuzzy hashing API. Information on how to use the
+fuzzy hashing program ssdeep can be found in the man page.
+
+
+
 A sample program that uses the API is in sample.c.
 
 More documentation on how to build and use DLLs with Microsoft Visual C
@@ -17,3 +24,11 @@ to produce the DLL and DEF files. MSVC cannot use the MinGW library, but since y
 Once you have testdll.lib, it is trivial to produce the executable with MSVC:
 cl testmain.c testdll.lib
 
+
+
+** SEE ALSO **
+
+- Jesse D. Kornblum, "Identifying almost identical files using context 
+triggered piecewise hashing", Digital Investigaton, 3(S):91-97, 
+September 2006, http://dx.doi.org/10.1016/j.diin.2006.06.015,
+The Proceedings of the 6th Annual Digital Forensic Research Workshop

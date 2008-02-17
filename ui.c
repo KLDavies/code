@@ -18,6 +18,9 @@ void print_status(char *fmt, ...)
 
 void print_error(state *s, char *fmt, ...)
 {
+  if (NULL == s)
+    internal_error("%s: NULL state passed to print_error", __progname);
+
   if (s->mode & mode_silent)
     return;
 
@@ -44,6 +47,9 @@ va_end(ap); fprintf (HANDLE,"%s", NEWLINE);
 
 void print_error_unicode(state *s, TCHAR *fn, char *fmt, ...)
 {
+  if (NULL == s)
+    internal_error("%s: NULL state passed to print_error_unicode", __progname);
+
   if (!(s->mode & mode_silent))
     {
       display_filename(stderr,fn);
@@ -68,7 +74,6 @@ void internal_error(char *fmt, ... )
 
 void fatal_error(char *fmt, ... )
 {
-  printf ("%s FATAL: ", __progname);
   va_list(ap);
   
   va_start(ap,fmt); 
