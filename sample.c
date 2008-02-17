@@ -73,14 +73,15 @@ int write_data(unsigned char *buf, uint32_t sz, char *fn)
 int main(int argc, char **argv)
 {
   unsigned char * buf;
-  char * result;
+  char * result, * result2;
   FILE *handle; 
 
   srand(1);
 
-  buf = (unsigned char *)malloc(SIZE);
-  result = (char *)malloc(FUZZY_MAX_RESULT);
-  if (NULL == result || NULL == buf)
+  buf     = (unsigned char *)malloc(SIZE);
+  result  = (char *)malloc(FUZZY_MAX_RESULT);
+  result2 = (char *)malloc(FUZZY_MAX_RESULT);
+  if (NULL == result || NULL == buf || NULL == result2)
     {
       fprintf (stderr,"%s: Out of memory\n",argv[0]);
       return -1;
@@ -112,6 +113,23 @@ int main(int argc, char **argv)
   else
     printf ("%s\n", result);
   fclose(handle);
+
+
+  printf ("Modifying buffer and comparing to file\n");
+  int i;
+  for (i = 0x100 ; i < 0x110 ; ++i)
+    buf[i] = 37;
+  status = fuzzy_hash_buf(buf,SIZE,result2);  
+  if (status)
+    printf ("Error during buffer hash\n");
+  else
+    printf ("%s\n", result2);
+
+  i = fuzzy_compare(result,result2);
+  if (i != 0)
+    printf ("MATCH: score = %d\n", i);
+  else
+    printf ("did not match\n");
 
   return EXIT_SUCCESS;
 }

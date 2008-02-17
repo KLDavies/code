@@ -1,3 +1,16 @@
+2008-02-17 Jesse Kornblum <research@jessekornblum.com>
+
+	* Updated build system to create Win32 DLL, documentation,
+	  and packages.
+
+	* Added check in print_error functions to see if the state
+	  is valid. 
+	  
+	* Updated documentation, usage message.
+
+	* Added signature comparison example to sample program.
+	
+
 2008-02-16 Jesse Kornblum <research@jessekornblum.com>
 
 	* Removed block_size value from state variable. 

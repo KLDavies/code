@@ -79,8 +79,11 @@
 # include <libgen.h>
 #endif
 
+
 /* This allows us to open standard input in binary mode by default 
-   See http://gnuwin32.sourceforge.net/compile.html for more */
+   See http://gnuwin32.sourceforge.net/compile.html for more.
+   Technically it isn't needed in ssdeep as we don't process standard
+   input. But it was part of Jesse's template, so in it goes! */
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
@@ -214,11 +217,11 @@ int have_processed_dir(TCHAR *fn);
 int process_win32(state *s, TCHAR *fn);
 int process_normal(state *s, TCHAR *fn);
 
+
 // *********************************************************************
 // Fuzzy Hashing Engine
 // *********************************************************************
 int hash_file(state *s, TCHAR *fn);
-
 
 
 // *********************************************************************
@@ -234,7 +237,6 @@ void sanity_check(state *s, int condition, char *msg);
    will not work properly for a string that ends in a DIR_SEPARATOR */
 int my_basename(TCHAR *s);
 int my_dirname(TCHAR *s);
-
 
 /* Remove the newlines, if any, from the string. Works with both
    \r and \r\n style newlines */
@@ -257,7 +259,6 @@ void print_error_unicode(state *s, TCHAR *fn, char *fmt, ...);
 void internal_error(char *fmt, ... );
 void fatal_error(char *fmt, ... );
 void display_filename(FILE *out, TCHAR *fn);
-
 
 
 // *********************************************************************
