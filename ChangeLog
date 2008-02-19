@@ -3,7 +3,8 @@
 	* Added man pages to the EXTRA_DIST Makefile variable.
 	  Still need to reconfigure.
 
-	* Added more documentation to the Windows zip file.
+	* Added more documentation to the Windows zip file along
+	  with the sample.c file
 	
 
 2008-02-17 Jesse Kornblum <research@jessekornblum.com>
