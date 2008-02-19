@@ -227,8 +227,8 @@ ssdeep_SOURCES = main.c match.c engine.c                 \
                  main.h fuzzy.h tchar-local.h ssdeep.h
 
 CLEANFILES = fuzzy.dll fuzzy.def
-EXTRA_DIST = config.guess config.sub sample.c
-WINDOWSDOCS = README.TXT API.TXT
+EXTRA_DIST = $(man_MANS) config.guess config.sub sample.c FILEFORMAT
+WINDOWSDOCS = README.TXT API.TXT FILEFORMAT.TXT NEWS.TXT
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -760,6 +760,12 @@ README.TXT: ssdeep.1
 
 API.TXT: README
 	cp README API.TXT
+
+FILEFORMAT.TXT: FILEFORMAT
+	cp FILEFORMAT FILEFORMAT.TXT
+
+NEWS.TXT: NEWS
+	cp NEWS NEWS.TXT
 
 win-docs: $(WINDOWSDOCS)
 	flip -d $(WINDOWSDOCS)
