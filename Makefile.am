@@ -23,15 +23,21 @@ dll: $(libfuzzy_la_SOURCES)
 
 CLEANFILES=fuzzy.dll fuzzy.def
 
-EXTRA_DIST=$(man_MANS) config.guess config.sub sample.c
+EXTRA_DIST=$(man_MANS) config.guess config.sub sample.c FILEFORMAT
 
-WINDOWSDOCS=README.TXT API.TXT
+WINDOWSDOCS=README.TXT API.TXT FILEFORMAT.TXT NEWS.TXT
 
 README.TXT: ssdeep.1
 	man ./ssdeep.1 | col -bx > README.TXT
 
 API.TXT: README
 	cp README API.TXT
+
+FILEFORMAT.TXT: FILEFORMAT
+	cp FILEFORMAT FILEFORMAT.TXT
+
+NEWS.TXT: NEWS
+	cp NEWS NEWS.TXT
 
 win-docs: $(WINDOWSDOCS)
 	flip -d $(WINDOWSDOCS)
