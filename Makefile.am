@@ -23,7 +23,7 @@ dll: $(libfuzzy_la_SOURCES)
 
 CLEANFILES=fuzzy.dll fuzzy.def
 
-EXTRA_DIST=config.guess config.sub sample.c
+EXTRA_DIST=$(man_MANS) config.guess config.sub sample.c
 
 WINDOWSDOCS=README.TXT API.TXT
 

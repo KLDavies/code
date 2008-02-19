@@ -1,3 +1,9 @@
+2008-02-18 Jesse Kornblum <research@jessekornblum.com>
+
+	* Added man pages to the EXTRA_DIST Makefile variable.
+	  Still need to reconfigure.
+	
+
 2008-02-17 Jesse Kornblum <research@jessekornblum.com>
 
 	* Updated build system to create Win32 DLL, documentation,
