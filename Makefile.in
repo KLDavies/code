@@ -778,7 +778,7 @@ win-package: win-docs
 	make dll
 	$(STRIP) ssdeep.exe
 	mkdir $(distdir)
-	cp $(WINDOWSDOCS) ssdeep.exe fuzzy.dll fuzzy.def $(distdir)
+	cp $(WINDOWSDOCS) ssdeep.exe fuzzy.dll fuzzy.def sample.c $(distdir)
 	zip -r9 $(distdir).zip $(distdir)
 	rm -rf $(distdir) $(WINDOWSDOCS)
 
