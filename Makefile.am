@@ -45,7 +45,6 @@ win-docs: $(WINDOWSDOCS)
 
 win-package: win-docs
 	rm -rf $(distdir).zip $(distdir)
-	./configure --host=mingw32
 	make
 	make dll
 	$(STRIP) ssdeep.exe

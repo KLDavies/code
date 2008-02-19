@@ -5,6 +5,8 @@
 
 	* Added more documentation to the Windows zip file along
 	  with the sample.c file
+
+	* Removed extraneous recongfiguration from Makefile.am
 	
 
 2008-02-17 Jesse Kornblum <research@jessekornblum.com>
