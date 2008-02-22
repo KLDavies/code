@@ -4,6 +4,8 @@
 	  unsigned char values. This also required updating
 	  the match_compare function to handle Unicode
 	  characters when displaying match results.
+
+	* Flipped files in Win32 zip file to have CR/LF 
 	
 
 2008-02-18 Jesse Kornblum <research@jessekornblum.com>

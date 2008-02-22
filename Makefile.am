@@ -50,6 +50,8 @@ win-package: win-docs
 	$(STRIP) ssdeep.exe
 	mkdir $(distdir)
 	cp $(WINDOWSDOCS) ssdeep.exe fuzzy.dll fuzzy.def sample.c $(distdir)
+	flip -d $(distdir)/{sample.c,fuzzy.def}
+#	unix2dos $(distdir)/{sample.c,fuzzy.def}
 	zip -r9 $(distdir).zip $(distdir)
 	rm -rf $(distdir) $(WINDOWSDOCS)
 
