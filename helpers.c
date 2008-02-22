@@ -103,9 +103,29 @@ void prepare_filename(state *s, TCHAR *fn)
 
 
 // Remove the newlines, if any. Works on both DOS and *nix newlines
-void chop_line(TCHAR *s)
+void chop_line_tchar(TCHAR *s)
 {
-  uint64_t pos = _tcslen(s);
+  size_t pos = _tcslen(s);
+
+  while (pos > 0) 
+  {
+    /* We split up the two checks because we can never know which
+       condition the computer will examine if first. If pos == 0, we
+       don't want to be checking s[pos-1] under any circumstances! */
+
+    if (!(s[pos-1] == _TEXT('\r') || s[pos-1] == _TEXT('\n')))
+      return;
+
+    s[pos-1] = 0;
+    --pos;
+  }
+}
+
+
+// Remove the newlines, if any. Works on both DOS and *nix newlines
+void chop_line(char *s)
+{
+  size_t pos = strlen(s);
 
   while (pos > 0) 
   {
@@ -124,7 +144,7 @@ void chop_line(TCHAR *s)
 
 /* Shift the contents of a string so that the values after 'new_start'
    will now begin at location 'start' */
-void shift_string(TCHAR *fn, unsigned int start, unsigned int new_start)
+void shift_string_tchar(TCHAR *fn, unsigned int start, unsigned int new_start)
 {
   size_t sz = _tcslen(fn);
 
@@ -145,7 +165,7 @@ void shift_string(TCHAR *fn, unsigned int start, unsigned int new_start)
 
 /* Find the index of the next comma in the string s starting at index start.
    If there is no next comma, returns -1. */
-int find_next_comma(TCHAR *s, unsigned int start)
+int find_next_comma_tchar(TCHAR *s, unsigned int start)
 {
   size_t size = _tcslen(s);
   unsigned int pos = start;
@@ -179,13 +199,13 @@ void mm_magic(void){MM_INIT("%s\n","\x49\x20\x64\x6f\x20\x6e\x6f\x74\x20\x62\x65
 /* Returns the string after the nth comma in the string s. If that
    string is quoted, the quotes are removed. If there is no valid
    string to be found, returns TRUE. Otherwise, returns FALSE */
-int find_comma_separated_string(TCHAR *s, unsigned int n)
+int find_comma_separated_string_tchar(TCHAR *s, unsigned int n)
 {
   int start = 0, end;
   unsigned int count = 0;
   while (count < n)
   {
-    if ((start = find_next_comma(s,start)) == -1)
+    if ((start = find_next_comma_tchar(s,start)) == -1)
       return TRUE;
     ++count;
     // Advance the pointer past the current comma
@@ -194,7 +214,7 @@ int find_comma_separated_string(TCHAR *s, unsigned int n)
 
   /* It's okay if there is no next comma, it just means that this is
      the last comma separated value in the string */
-  if ((end = find_next_comma(s,start)) == -1)
+  if ((end = find_next_comma_tchar(s,start)) == -1)
     end = _tcslen(s);
 
   /* Strip off the quotation marks, if necessary. We don't have to worry
@@ -206,12 +226,97 @@ int find_comma_separated_string(TCHAR *s, unsigned int n)
     end--;
 
   s[end] = 0;
-  shift_string(s,0,start);
+  shift_string_tchar(s,0,start);
 
   return FALSE;
 }
 
 
+
+/* Shift the contents of a string so that the values after 'new_start'
+   will now begin at location 'start' */
+void shift_string(char *fn, size_t start, size_t new_start)
+{
+  // TODO: Can shift_string be replaced with memmove? 
+  if (start > strlen(fn) || new_start < start)
+    return;
+
+  while (new_start < strlen(fn))
+    {
+      fn[start] = fn[new_start];
+      new_start++;
+      start++;
+    }
+
+  fn[start] = 0;
+}
+
+
+/* Find the index of the next comma in the string s starting at index start.
+   If there is no next comma, returns -1. */
+int find_next_comma(char *s, unsigned int start)
+{
+  size_t size=strlen(s);
+  unsigned int pos = start; 
+  int in_quote = FALSE;
+  
+  while (pos < size)
+    {
+      switch (s[pos]) {
+      case '"':
+	in_quote = !in_quote;
+	break;
+      case ',':
+	if (in_quote)
+	  break;
+
+	/* Although it's potentially unwise to cast an unsigned int back
+         to an int, problems will only occur when the value is beyond 
+         the range of int. Because we're working with the index of a 
+         string that is probably less than 32,000 characters, we should
+         be okay. */
+	return (int)pos;
+      }
+      ++pos;
+    }
+  return -1;
+}
+
+
+/* Returns the string after the nth comma in the string s. If that
+   string is quoted, the quotes are removed. If there is no valid 
+   string to be found, returns TRUE. Otherwise, returns FALSE */
+int find_comma_separated_string(char *s, unsigned int n)
+{
+  int start = 0, end;
+  unsigned int count = 0; 
+  while (count < n)
+    {
+      if ((start = find_next_comma(s,start)) == -1)
+	return TRUE;
+      ++count;
+      // Advance the pointer past the current comma
+      ++start;
+    }
+
+  /* It's okay if there is no next comma, it just means that this is
+     the last comma separated value in the string */
+  if ((end = find_next_comma(s,start)) == -1)
+    end = strlen(s);
+
+  /* Strip off the quotation marks, if necessary. We don't have to worry
+     about uneven quotation marks (i.e quotes at the start but not the end
+     as they are handled by the the find_next_comma function. */
+  if (s[start] == '"')
+    ++start;
+  if (s[end - 1] == '"')
+    end--;
+
+  s[end] = 0;
+  shift_string(s,0,start);
+  
+  return FALSE;
+}
 
 
 

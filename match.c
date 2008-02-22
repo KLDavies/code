@@ -77,11 +77,19 @@ int match_compare(state *s, TCHAR *fn, char *sum)
     if (score > s->threshold)
     {
       if (s->mode & mode_csv)
-	  _tprintf(_TEXT("%s,%s,%"PRIu32"%s"), fn, tmp->fn, score, NEWLINE);
+	{
+	  display_filename(stdout,fn);
+	  printf(",");
+	  display_filename(stdout,tmp->fn);
+	  print_status(",%"PRIu32, score);
+	}
       else
-	  _tprintf(_TEXT("%s matches %s (%"PRIu32")%s"), 
-		   fn, tmp->fn, score, NEWLINE);
-      
+	{
+	  display_filename(stdout,fn);
+	  printf(" matches ");
+	  display_filename(stdout,tmp->fn);
+	  print_status(" (%"PRIu32")", score);
+	}
       
       /* We don't return right away as this file could match more than
 	 one signature.  */
@@ -150,8 +158,9 @@ int match_add(state *s, TCHAR *fn, char *hash)
 
 int match_load(state *s, char *fn)
 {
-  TCHAR *str, *known_file_name;
-  unsigned char *known_hash;
+  size_t tchar_sz = sizeof(TCHAR);
+  TCHAR *known_file_name;
+  char *str, *known_hash;
   FILE *handle;
 
   if ((handle = fopen(fn,"rb")) == NULL)
@@ -161,7 +170,7 @@ int match_load(state *s, char *fn)
     return TRUE;
   }
 
-  str = (TCHAR *)malloc(sizeof(TCHAR) * MAX_STR_LEN);
+  str = (char *)malloc(sizeof(char) * MAX_STR_LEN);
   if (str == NULL)
   {
     print_error(s,"%s: out of memory", __progname);
@@ -170,39 +179,46 @@ int match_load(state *s, char *fn)
   
   // The first line should be the header. We don't need to chop it
   // as we're only comparing it to the length of the known header.
-  _fgetts(str,MAX_STR_LEN,handle);
-  if (_tcsncmp(str,_TEXT(SSDEEPV1_HEADER),_tcslen(_TEXT(SSDEEPV1_HEADER))))
+  fgets(str,MAX_STR_LEN,handle);
+  if (strncmp(str,SSDEEPV1_HEADER,strlen(SSDEEPV1_HEADER)))
   {
     free(str);
     print_error(s,"%s: invalid file header", fn);
     return TRUE;
   }
   
-  known_file_name = (TCHAR *)malloc(sizeof(TCHAR) * MAX_STR_LEN);
+  known_file_name = (TCHAR *)malloc(tchar_sz * MAX_STR_LEN);
   if (known_file_name == NULL)
     fatal_error("%s: Out of memory", __progname);
 
-  known_hash = (unsigned char *)malloc(sizeof(unsigned char) * MAX_STR_LEN);
+  known_hash = (char *)malloc(sizeof(char) * MAX_STR_LEN);
   if (NULL == known_hash)
     fatal_error("%s: Out of memory", __progname);
 
-  while (_fgetts(str,MAX_STR_LEN,handle))
+  while (fgets(str,MAX_STR_LEN,handle))
   {
     chop_line(str);
 
-    _tcsncpy(known_file_name,str,MAX_STR_LEN);
+    /* The file format is:
+         hash,filename 
+    */
 
-    // The file format is:  hash,filename
-    find_comma_separated_string(str,0);
-    find_comma_separated_string(known_file_name,1);
+    strncpy(known_hash,str,MIN(MAX_STR_LEN,strlen(str)));
+    find_comma_separated_string(known_hash,0);
 
-    /* RBF - We may want to make this code a separate function */
-    size_t i, sz = _tcslen(str);
+    //    memset(known_file_name,0,tchar_sz * MAX_STR_LEN);
+    find_comma_separated_string(str,1);
+
+    size_t i, sz = strlen(str);
     for (i = 0 ; i < sz ; i++)
-      {
-	known_hash[i] = (unsigned char)(str[i] & 0xff);
-      }
-    known_hash[i] = 0;
+    {
+#ifdef _WIN32
+      known_file_name[i] = (TCHAR)(str[i]);
+#else
+      known_file_name[i] = str[i];
+#endif
+    }
+    known_file_name[i] = 0;
     
     if (match_add(s,known_file_name,known_hash))
     {

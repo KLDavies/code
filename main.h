@@ -240,10 +240,16 @@ int my_dirname(TCHAR *s);
 
 /* Remove the newlines, if any, from the string. Works with both
    \r and \r\n style newlines */
-void chop_line(TCHAR *s);
+void chop_line_tchar(TCHAR *s);
+void chop_line(char *s);
 
-int find_comma_separated_string(TCHAR *s, unsigned int n);
-void shift_string(TCHAR *fn, unsigned int start, unsigned int new_start);
+int find_comma_separated_string_tchar(TCHAR *s, unsigned int n);
+void shift_string_tchar(TCHAR *fn, unsigned int start, unsigned int new_start);
+
+int find_comma_separated_string(char *s, unsigned int n);
+void shift_string(char *fn, size_t start, size_t new_start);
+
+
 void prepare_filename(state *s, TCHAR *fn);
 
 /* Returns the size of the given file, in bytes. */
