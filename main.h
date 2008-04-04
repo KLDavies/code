@@ -1,8 +1,6 @@
 
 /* ssdeep
-   (C) Copyright 2006 ManTech International Corporation.
-
-   $Id$
+   (C) Copyright 2006 ManTech CFIA.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -22,10 +20,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,122 +27,42 @@
 #include <limits.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <ctype.h>
 #include <inttypes.h>
 
-#ifdef HAVE_DIRENT_H
-# include <dirent.h>
+#ifdef __LINUX
+// These are used to find file sizes of block devices. See helpers.c
+#include <sys/ioctl.h>
+#include <sys/mount.h>
 #endif
 
-#ifdef TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# ifdef HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
-# include <sys/types.h>
-#endif
-
-#ifdef HAVE_SYS_PARAM_H
-# include <sys/param.h>
-#endif
-
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#endif
-
-#ifdef HAVE_SYS_IOCTL_H
-# include <sys/ioctl.h>
-#endif
-
-#ifdef HAVE_SYS_MOUNT_H
-# include <sys/mount.h>
-#endif 
-
-#ifdef HAVE_SYS_DISK_H
-# include <sys/disk.h>
-#endif
-
-#ifdef HAVE_LIBGEN_H
-# include <libgen.h>
-#endif
-
-
-/* This allows us to open standard input in binary mode by default 
-   See http://gnuwin32.sourceforge.net/compile.html for more.
-   Technically it isn't needed in ssdeep as we don't process standard
-   input. But it was part of Jesse's template, so in it goes! */
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>
-#endif
-
-
-#include "fuzzy.h"
-#include "tchar-local.h"
-
-#ifndef HAVE_FSEEKO
-# define fseeko fseek
-# define ftello ftell
-#endif
 
 #define FALSE  0
 #define TRUE   1
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
-#endif
 
 #define MM_INIT  printf
 
 #define SSDEEPV1_HEADER        "ssdeep,1.0--blocksize:hash:hash,filename"
 #define OUTPUT_FILE_HEADER     SSDEEPV1_HEADER
 
-#define MD5DEEP_ALLOC(TYPE,VAR,SIZE)     \
-VAR = (TYPE *)malloc(sizeof(TYPE) * SIZE);  \
-if (NULL == VAR)  \
-   return EXIT_FAILURE; \
-memset(VAR,0,SIZE * sizeof(TYPE));
-
-
-/* These are the types of files we can encounter while hashing */
-#define file_regular    0
-#define file_directory  1
-#define file_door       2
-#define file_block      3
-#define file_character  4
-#define file_pipe       5
-#define file_socket     6
-#define file_symlink    7
-#define file_unknown  254
 
 typedef struct _lsh_node {
-  char    *hash;
-  TCHAR   *fn;
+  char             *hash, *fn;
   struct _lsh_node *next;
 } lsh_node;
 
 typedef struct {
-  lsh_node  *top, *bottom;
+  lsh_node         *top, *bottom;
 } lsh_list;
-
 
 typedef struct {
   int       first_file_processed;
   uint64_t  mode;
   lsh_list  *known_hashes;
-  uint8_t   threshold;
-  int       argc;
-  TCHAR     **argv;
+
+  // These are used when computing where matched files are different
+  uint32_t  block_size;
+
 } state;
 
 
@@ -182,8 +96,11 @@ int getopt(int argc, char *const argv[], const char *optstring);
 
 #endif  // ifdef _WIN32/else
 
-
-
+#ifdef __GLIBC__
+extern char *__progname;
+#else 
+char *__progname;
+#endif
 
 
 /* Because the modes are stored in a uint64_t variable, they must
@@ -197,90 +114,71 @@ int getopt(int argc, char *const argv[], const char *optstring);
 #define mode_directory    1<<5
 #define mode_match_pretty 1<<6
 #define mode_verbose      1<<7
-#define mode_csv          1<<8
-#define mode_threshold    1<<9
 
 #define MODE(A)   (s->mode & A)
-
 #define BLANK_LINE   \
-"                                                                               "
+"                                                                        "
 
 
 
 // *********************************************************************
 // Checking for cycles
 // *********************************************************************
-int done_processing_dir(TCHAR *fn);
-int processing_dir(TCHAR *fn);
-int have_processed_dir(TCHAR *fn);
+int done_processing_dir(char *fn);
+int processing_dir(char *fn);
+int have_processed_dir(char *fn);
 
-int process_win32(state *s, TCHAR *fn);
-int process_normal(state *s, TCHAR *fn);
-
+int process(state *s, char *fn);
 
 // *********************************************************************
-// Fuzzy Hashing Engine
+// Engine functions
 // *********************************************************************
-int hash_file(state *s, TCHAR *fn);
+int hash_file(state *s, char *fn);
+
+// Returns a score from 0-100 about how well the two sums match
+uint32_t spamsum_match(state *s, const char *str1, const char *str2);
+
 
 
 // *********************************************************************
 // Helper functions
 // *********************************************************************
-void try(void);
-void sanity_check(state *s, int condition, char *msg);
 
 /* The basename function kept misbehaving on OS X, so I rewrote it.
    This function isn't perfect, nor is it designed to be. Because
    we're guarenteed to be working with a filename here, there's no way
    that s will end with a DIR_SEPARATOR (e.g. /foo/bar/). This function
    will not work properly for a string that ends in a DIR_SEPARATOR */
-int my_basename(TCHAR *s);
-int my_dirname(TCHAR *s);
+int my_basename(char *s);
+
+void print_error(state *s, char *fn, char *msg);
+void fatal_error(state *s, char *fn, char *msg);
 
 /* Remove the newlines, if any, from the string. Works with both
    \r and \r\n style newlines */
-void chop_line_tchar(TCHAR *s);
 void chop_line(char *s);
 
-int find_comma_separated_string_tchar(TCHAR *s, unsigned int n);
-void shift_string_tchar(TCHAR *fn, unsigned int start, unsigned int new_start);
-
 int find_comma_separated_string(char *s, unsigned int n);
-void shift_string(char *fn, size_t start, size_t new_start);
-
-
-void prepare_filename(state *s, TCHAR *fn);
+void shift_string(char *fn, unsigned int start, unsigned int new_start);
+void prepare_filename(state *s, char *fn);
 
 /* Returns the size of the given file, in bytes. */
 off_t find_file_size(FILE *h);
 
-
-// *********************************************************************
-// User Interface Functions
-// *********************************************************************
-void print_status(char *fmt, ...);
-void print_error(state *s, char *fmt, ...);
-void print_error_unicode(state *s, TCHAR *fn, char *fmt, ...);
-void internal_error(char *fmt, ... );
-void fatal_error(char *fmt, ... );
-void display_filename(FILE *out, TCHAR *fn);
-
-
 // *********************************************************************
 // Matching functions
 // *********************************************************************
+int lsh_list_init(lsh_list *l);
 
-int match_init(state *s);
 
 // See if the existing file and hash are in the set of known hashes
-int match_compare(state *s, TCHAR *fn, char *sum);
+int match_compare(state *s, char *fn, char *sum);
 
 // Load a file of known hashes
 int match_load(state *s, char *fn);
 
 // Add a single new hash to the set of known hashes
-int match_add(state *s, TCHAR *fn, char *hash);
+int match_add(state *s, char *fn, char *hash);
 
 // Display all matches in the set of known hashes nicely
 int match_pretty(state *s);
