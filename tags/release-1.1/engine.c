@@ -1,8 +1,6 @@
 
 /* ssdeep
-   Copyright (C) 2006 ManTech International Corporation
-
-   $Id$
+   Copyright (C) 2006 ManTech CFIA.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -43,6 +41,20 @@
 
 #include "main.h"
 
+#ifndef MIN
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#endif
+
+#ifndef MAX
+#define MAX(a,b) ((a)>(b)?(a):(b))
+#endif
+
+typedef unsigned char uchar;
+
+// the output is a string of length 64 in base64
+#define SPAMSUM_LENGTH 64
+#define MAX_RESULT    (SPAMSUM_LENGTH + (SPAMSUM_LENGTH/2 + 20))
+
 #define MIN_BLOCKSIZE  3
 #define ROLLING_WINDOW 7
 
@@ -53,7 +65,7 @@
 #define BUFFER_SIZE  8192
 
 static struct {
-  unsigned char window[ROLLING_WINDOW];
+  uchar window[ROLLING_WINDOW];
   uint32_t h1, h2, h3;
   uint32_t n;
 } roll_state;
@@ -69,7 +81,7 @@ static struct {
   h3 is a shift/xor based rolling hash, and is mostly needed to ensure that
   we can cope with large blocksize values
 */
-static inline uint32_t roll_hash(unsigned char c)
+static inline uint32_t roll_hash(uchar c)
 {
   roll_state.h2 -= roll_state.h1;
   roll_state.h2 += ROLLING_WINDOW * c;
@@ -99,7 +111,7 @@ static uint32_t roll_reset(void)
 }
 
 /* a simple non-rolling hash, based on the FNV hash */
-static inline uint32_t sum_hash(unsigned char c, uint32_t h)
+static inline uint32_t sum_hash(uchar c, uint32_t h)
 {
   h *= HASH_PRIME;
   h ^= c;
@@ -112,7 +124,7 @@ typedef struct _ss_context {
   uint32_t h, h2, h3;
   uint32_t j, n, i, k;
   uint32_t block_size;
-  unsigned char ret2[SPAMSUM_LENGTH/2 + 1];
+  uchar ret2[SPAMSUM_LENGTH/2 + 1];
 } ss_context;
 
 
@@ -125,12 +137,11 @@ static void ss_destroy(ss_context *ctx)
 
 static int ss_init(ss_context *ctx, FILE *handle)
 {
-  ctx->ret = (char *)malloc(sizeof(char) * FUZZY_MAX_RESULT);
+  ctx->ret = (char *)malloc(sizeof(char) * MAX_RESULT);
   if (ctx->ret == NULL)
     return TRUE;
 
-  if (handle != NULL)
-    ctx->total_chars = find_file_size(handle);
+  ctx->total_chars = find_file_size(handle);
 
   ctx->block_size = MIN_BLOCKSIZE;
   while (ctx->block_size * SPAMSUM_LENGTH < ctx->total_chars) {
@@ -232,12 +243,10 @@ static int ss_update(ss_context *ctx, FILE *handle)
 }
 
 
-int fuzzy_hash_file(FILE *handle,
-		    char *result)
+static int ss_compute(FILE *handle, char *result)
 {
-  uint64_t filepos = ftello(handle);
-  int done         = FALSE;
-  ss_context *ctx  = (ss_context *)malloc(sizeof(ss_context));
+  int done = FALSE;
+  ss_context *ctx = (ss_context *)malloc(sizeof(ss_context));
   
   if (ctx == NULL)
     return TRUE;
@@ -246,9 +255,7 @@ int fuzzy_hash_file(FILE *handle,
 
   while (!done)
   {
-    if (fseeko(handle,0,SEEK_SET))
-      return TRUE;
-
+    rewind(handle);
     ss_update(ctx,handle);
 
     /* our blocksize guess may have been way off - repeat if necessary */
@@ -258,67 +265,10 @@ int fuzzy_hash_file(FILE *handle,
       done = TRUE;
   }
 
-  strncpy(result,ctx->ret,FUZZY_MAX_RESULT);
-
-  /* RBF - What do we do in this case? We have a valid result,
-     but we can't return the file pointer to its original position. */
-  fseeko(handle,filepos,SEEK_SET);
+  strncpy(result,ctx->ret,MAX_RESULT);
 
   ss_destroy(ctx);
 
-  free(ctx);
-  return FALSE;
-}
-
-
-int fuzzy_hash_buf(unsigned char *buf,
-		   uint32_t      buf_len,
-		   char          *result)
-{
-  int done = FALSE;
-  ss_context *ctx  = (ss_context *)malloc(sizeof(ss_context));
-  
-  if (ctx == NULL)
-    return TRUE;
-
-  ctx->total_chars = buf_len;
-  ss_init(ctx, NULL);
-
-
-  while (!done)
-  {
-    snprintf(ctx->ret, 12, "%u:", ctx->block_size);
-    ctx->p = ctx->ret + strlen(ctx->ret);
-    
-    memset(ctx->p, 0, SPAMSUM_LENGTH+1);
-    memset(ctx->ret2, 0, sizeof(ctx->ret2));
-    
-    ctx->k  = ctx->j  = 0;
-    ctx->h3 = ctx->h2 = HASH_INIT;
-    ctx->h  = roll_reset();
-
-    ss_engine(ctx,buf,buf_len);
-
-    /* our blocksize guess may have been way off - repeat if necessary */
-    if (ctx->block_size > MIN_BLOCKSIZE && ctx->j < SPAMSUM_LENGTH/2) 
-      ctx->block_size = ctx->block_size / 2;
-    else
-      done = TRUE;
-
-    if (ctx->h != 0) 
-      {
-	ctx->p[ctx->j] = b64[ctx->h2 % 64];
-	ctx->ret2[ctx->k] = b64[ctx->h3 % 64];
-      }
-    
-    strcat(ctx->p+ctx->j, ":");
-    strcat(ctx->p+ctx->j, ctx->ret2);
-  }
-
-
-  strncpy(result,ctx->ret,FUZZY_MAX_RESULT);
-
-  ss_destroy(ctx);
   free(ctx);
   return FALSE;
 }
@@ -351,7 +301,7 @@ static int has_common_substring(const char *s1, const char *s2)
      the first string */
   for (i=0;s1[i];i++) 
   {
-    hashes[i] = roll_hash((unsigned char)s1[i]);
+    hashes[i] = roll_hash((uchar)s1[i]);
   }
   num_hashes = i;
   
@@ -363,7 +313,7 @@ static int has_common_substring(const char *s1, const char *s2)
      candidate substring match. We then confirm that match with
      a direct string comparison */
   for (i=0;s2[i];i++) {
-    uint32_t h = roll_hash((unsigned char)s2[i]);
+    uint32_t h = roll_hash((uchar)s2[i]);
     if (i < ROLLING_WINDOW-1) continue;
     for (j=ROLLING_WINDOW-1;j<num_hashes;j++) 
     {
@@ -477,7 +427,7 @@ static unsigned score_strings(const char *s1, const char *s2, uint32_t block_siz
 /*
   given two spamsum strings return a value indicating the degree to which they match.
 */
-int fuzzy_compare(const char *str1, const char *str2)
+uint32_t spamsum_match(state *s, const char *str1, const char *str2)
 {
   uint32_t block_size1, block_size2;
   uint32_t score = 0;
@@ -541,26 +491,111 @@ int fuzzy_compare(const char *str1, const char *str2)
     score1 = score_strings(s1_1, s2_1, block_size1);
     score2 = score_strings(s1_2, s2_2, block_size2);
 
-    //    s->block_size = block_size1;
+    s->block_size = block_size1;
 
     score = MAX(score1, score2);
   } else if (block_size1 == block_size2*2) {
 
     score = score_strings(s1_1, s2_2, block_size1);
-    //    s->block_size = block_size1;
+    s->block_size = block_size1;
   } else {
 
     score = score_strings(s1_2, s2_1, block_size2);
-    //    s->block_size = block_size2;
+    s->block_size = block_size2;
   }
   
   free(s1);
   free(s2);
   
-  return (int)score;
+  return score;
 }
 
 
+int hash_file(state *s, char *fn)
+{
+  size_t fn_length;
+  char *sum, *msg, *my_filename;
+  FILE *handle;
+  
+  if ((handle = fopen(fn,"rb")) == NULL)
+  {
+    print_error(s,fn,strerror(errno));
+    return TRUE;
+  }
+ 
+  if ((sum = (char *)malloc(sizeof(char) * MAX_RESULT)) == NULL)
+  {
+    fclose(handle);
+    print_error(s,fn,"out of memory");
+    return TRUE;
+  }
+
+  if ((msg = (char *)malloc(sizeof(char) * 80)) == NULL)
+  {
+    free(sum);
+    fclose(handle);
+    print_error(s,fn,"out of memory");
+    return TRUE;
+  }
+
+#define CUTOFF_LENGTH   78
+
+  if (MODE(mode_verbose))
+  {
+    fn_length = strlen(fn);
+
+
+    if (fn_length > CUTOFF_LENGTH)
+    {
+      // We have to make a duplicate of the string to call basename on it
+      // We need the original name for the output later on
+      my_filename = strdup(fn);
+      my_basename(my_filename);
+    }
+    else
+      my_filename = fn;
+
+    /* So that the message is zero-terminated, we set the last char
+       to zeros and make sure that we don't write to the last character */
+    msg[CUTOFF_LENGTH-1] = 0;
+    snprintf(msg,CUTOFF_LENGTH-1,"Hashing: %s", my_filename);
+    fprintf(stderr,"%s\r", msg);
+
+    if (fn_length > CUTOFF_LENGTH)
+      free(my_filename);
+  }
+
+  ss_compute(handle,sum);
+  prepare_filename(s,fn);
+
+  if (MODE(mode_match_pretty))
+  {
+    if (match_add(s,fn,sum))
+      print_error(s,fn,"Unable to add hash to set of known hashes");
+  }
+  else if (MODE(mode_match) || MODE(mode_directory))
+  {
+    match_compare(s,fn,sum);
+
+    if (MODE(mode_directory))
+      if (match_add(s,fn,sum))
+	print_error(s,fn,"Unable to add hash to set of known hashes");
+  }
+  else
+  {
+    if (s->first_file_processed)
+    {
+      printf ("%s%s", OUTPUT_FILE_HEADER,NEWLINE);
+      s->first_file_processed = FALSE;
+    }
+    printf ("%s,\"%s\"%s", sum, fn, NEWLINE);
+  }
+
+  fclose(handle);
+  free(sum);
+  free(msg);
+  return FALSE;
+}
 
 
 

@@ -1,8 +1,6 @@
 
 /* ssdeep
-   (C) Copyright 2006 ManTech International Corporation
-
-   $Id$
+   (C) Copyright 2006 ManTech CFIA.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -20,14 +18,10 @@
 */
 
 
-#include "ssdeep.h"
+#include "main.h"
 
-
-/* The longest line we should encounter when reading files of known hashes */
+// The longest line we should encounter when reading files of known hashes
 #define MAX_STR_LEN  2048
-
-
-
 
 int lsh_list_init(lsh_list *l)
 {
@@ -36,66 +30,37 @@ int lsh_list_init(lsh_list *l)
   return FALSE;
 }
 
+#define MAX(A,B)            (A>B)?A:B
+#define STRINGS_EQUAL(A,B)  !strncmp(A,B,MAX(strlen(A),strlen(B)))
 
-int match_init(state *s)
+int match_compare(state *s, char *fn, char *sum)
 {
-  s->known_hashes = (lsh_list *)malloc(sizeof(lsh_list));
-  if (s->known_hashes == NULL)
-    return TRUE;
-  
-  lsh_list_init(s->known_hashes);  
-  return FALSE;
-}
-
-
-
-#define STRINGS_EQUAL(A,B)    !_tcsncmp(A,B,MAX(_tcslen(A),_tcslen(B)))
-
-int match_compare(state *s, TCHAR *fn, char *sum)
-{
-  size_t fn_len  = _tcslen(fn);
-  size_t sum_len = strlen(sum);
-
   int status = FALSE;
-  int score;
+  uint32_t score;
   lsh_node *tmp = s->known_hashes->top;
 
   while (tmp != NULL)
   {
     if (s->mode & mode_match_pretty)
     {
-      /* Prevent printing the redundant "A matches A" */
-      if (!(_tcsncmp(fn,tmp->fn,MAX(fn_len,_tcslen(tmp->fn)))) &&
-	  !(strncmp(sum,tmp->hash,MAX(sum_len,strlen(tmp->hash)))))
+      // Prevent printing the redundant "A matches A"
+      if (STRINGS_EQUAL(fn,tmp->fn) && STRINGS_EQUAL(sum,tmp->hash))
       {
 	tmp = tmp->next;
 	continue;
       }
     }
 
-    score = fuzzy_compare(sum,tmp->hash);
-    if (score > s->threshold)
+    score = spamsum_match(s,sum,tmp->hash);
+    if (score > 0)
     {
-      if (s->mode & mode_csv)
-	{
-	  display_filename(stdout,fn);
-	  printf(",");
-	  display_filename(stdout,tmp->fn);
-	  print_status(",%"PRIu32, score);
-	}
-      else
-	{
-	  display_filename(stdout,fn);
-	  printf(" matches ");
-	  display_filename(stdout,tmp->fn);
-	  print_status(" (%"PRIu32")", score);
-	}
-      
-      /* We don't return right away as this file could match more than
-	 one signature.  */
+      printf ("%s matches %s (%"PRIu32")%s", fn, tmp->fn, score, NEWLINE);
+
+      // We don't return right away as this file could match more than
+      // one signature. 
       status = TRUE;
     }
-    
+
     tmp = tmp->next;
   }
 
@@ -103,25 +68,28 @@ int match_compare(state *s, TCHAR *fn, char *sum)
 }
 
 
-static int lsh_list_insert(state *s, lsh_list *l, TCHAR *fn, char *sum)
+static int lsh_list_insert(state *s, lsh_list *l, char *fn, char *sum)
 {
   lsh_node *new;
 
   if ((new = (lsh_node *)malloc(sizeof(lsh_node))) == NULL)
-    fatal_error("%s: Out of memory", __progname);
+  {
+    print_error(s,fn,"out of memory");
+    return TRUE;
+  }
 
   new->next = NULL;
   if (((new->hash = strdup(sum)) == NULL) ||
-      ((new->fn   = _tcsdup(fn))  == NULL))
+      ((new->fn   = strdup(fn))  == NULL))
   {
-    print_error(s,"%s: out of memory", __progname);
+    print_error(s,fn,"out of memory");
     return TRUE;
   }
 
   if (l->bottom == NULL)
   {
     if (l->top != NULL)
-      fatal_error("%s: internal data structure inconsistency", fn);
+      fatal_error(s,fn,"internal data structure inconsistency");
 
     l->top = new;
     l->bottom = new;
@@ -141,7 +109,7 @@ int match_pretty(state *s)
   while (tmp != NULL)
   {
     if (match_compare(s,tmp->fn,tmp->hash))
-      print_status("");
+      printf ("\n");
 
     tmp = tmp->next;
   }
@@ -150,7 +118,7 @@ int match_pretty(state *s)
 }
 
 
-int match_add(state *s, TCHAR *fn, char *hash)
+int match_add(state *s, char *fn, char *hash)
 {
   return (lsh_list_insert(s,s->known_hashes,fn,hash));
 }
@@ -158,9 +126,7 @@ int match_add(state *s, TCHAR *fn, char *hash)
 
 int match_load(state *s, char *fn)
 {
-  size_t tchar_sz = sizeof(TCHAR);
-  TCHAR *known_file_name;
-  char *str, *known_hash;
+  unsigned char *str, *known_file_name;
   FILE *handle;
 
   if ((handle = fopen(fn,"rb")) == NULL)
@@ -170,10 +136,10 @@ int match_load(state *s, char *fn)
     return TRUE;
   }
 
-  str = (char *)malloc(sizeof(char) * MAX_STR_LEN);
+  str = (unsigned char *)malloc(sizeof(unsigned char) * MAX_STR_LEN);
   if (str == NULL)
   {
-    print_error(s,"%s: out of memory", __progname);
+    print_error(s,fn, "out of memory");
     return TRUE;
   }
   
@@ -183,44 +149,30 @@ int match_load(state *s, char *fn)
   if (strncmp(str,SSDEEPV1_HEADER,strlen(SSDEEPV1_HEADER)))
   {
     free(str);
-    print_error(s,"%s: invalid file header", fn);
+    print_error(s,fn, "invalid file header");
     return TRUE;
   }
   
-  known_file_name = (TCHAR *)malloc(tchar_sz * MAX_STR_LEN);
+  known_file_name = (unsigned char *)malloc(sizeof(unsigned char)*MAX_STR_LEN);
   if (known_file_name == NULL)
-    fatal_error("%s: Out of memory", __progname);
-
-  known_hash = (char *)malloc(sizeof(char) * MAX_STR_LEN);
-  if (NULL == known_hash)
-    fatal_error("%s: Out of memory", __progname);
+  {
+    free(str);
+    print_error(s,fn, "out of memory");
+    return TRUE;
+  }
 
   while (fgets(str,MAX_STR_LEN,handle))
   {
     chop_line(str);
 
-    /* The file format is:
-         hash,filename 
-    */
+    strncpy(known_file_name,str,MAX_STR_LEN);
 
-    strncpy(known_hash,str,MIN(MAX_STR_LEN,strlen(str)));
-    find_comma_separated_string(known_hash,0);
+    // The file format is:  hash,filename
+    find_comma_separated_string(str,0);
+    find_comma_separated_string(known_file_name,1);
 
-    //    memset(known_file_name,0,tchar_sz * MAX_STR_LEN);
-    find_comma_separated_string(str,1);
-
-    size_t i, sz = strlen(str);
-    for (i = 0 ; i < sz ; i++)
-    {
-#ifdef _WIN32
-      known_file_name[i] = (TCHAR)(str[i]);
-#else
-      known_file_name[i] = str[i];
-#endif
-    }
-    known_file_name[i] = 0;
-    
-    if (match_add(s,known_file_name,known_hash))
+      //    if (lsh_list_insert(s,s->known_hashes,known_file_name,str))
+    if (match_add(s,known_file_name,str))
     {
       // If we can't insert this value, we're probably out of memory.
       // There's no sense trying to read the rest of the file.
