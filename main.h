@@ -109,7 +109,8 @@
 #define MM_INIT  printf
 
 #define SSDEEPV1_HEADER        "ssdeep,1.0--blocksize:hash:hash,filename"
-#define OUTPUT_FILE_HEADER     SSDEEPV1_HEADER
+#define SSDEEPV1DC3_HEADER        "ssdeep,1.0.DC3.0--blocksize:hash:hash,filename"
+#define OUTPUT_FILE_HEADER     SSDEEPV1DC3_HEADER
 
 #define MD5DEEP_ALLOC(TYPE,VAR,SIZE)     \
 VAR = (TYPE *)malloc(sizeof(TYPE) * SIZE);  \
