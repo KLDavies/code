@@ -1,5 +1,6 @@
 // ssdeep
 // (C) Copyright 2010 ManTech International Corporation
+// (C) Copyright 2011 Kyrus Technology
 //
 // $Id: match.c 105 2010-09-28 00:05:38Z jessekornblum $
 //
@@ -129,12 +130,14 @@ int sig_file_open(state *s, char * fn, file_info_t * info)
     fclose(info->handle);
     return TRUE;
   }
-
+  
   if (strncmp(str,SSDEEPV1_0_HEADER,strlen(SSDEEPV1_0_HEADER)) &&
-      strncmp(str,SSDEEPV1_1_HEADER,strlen(SSDEEPV1_1_HEADER)))
+      strncmp(str,SSDEEPV1_0_DC3_HEADER,strlen(SSDEEPV1_0_DC3_HEADER)) &&
+      strncmp(str,SSDEEPV1_1_HEADER,strlen(SSDEEPV1_1_HEADER)) &&
+      strncmp(str,SSDEEPV1_2_HEADER,strlen(SSDEEPV1_2_HEADER)))
   {
     if (!MODE(mode_silent))
-      print_error(s,"%s: invalid file header: %s!!", fn, str);
+      print_error(s,"%s: Invalid file header.", fn);
     fclose(info->handle);
     return TRUE;
   }
