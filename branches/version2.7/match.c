@@ -176,6 +176,10 @@ int sig_file_next(state *s, file_info_t * info)
   //     hash,"filename"
 
   strncpy(info->known_hash,str,MIN(MAX_STR_LEN,strlen(str)));
+  // RBF - Do some basic validation of the known hash
+  // RBF -   Does it have the right number of colons?
+  // RBF -   Is it a valid hash (ASCII characters?)
+  // RBF -   Some flex/yacc/ANTLR magic here might be nice
   find_comma_separated_string(info->known_hash,0);
   find_comma_separated_string(str,1);
 
