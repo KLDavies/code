@@ -1,5 +1,6 @@
 // Fuzzy Hashing by Jesse Kornblum
 // Copyright (C) 2010 ManTech International Corporation
+// Copyright (C) 2011 Kyrus Technology
 //
 // $Id: main.c 97 2010-03-19 15:10:06Z jessekornblum $
 //
@@ -28,14 +29,14 @@ static int initialize_state(state *s)
 static void usage(void)
 {
   print_status ("%s version %s by Jesse Kornblum", __progname, VERSION);
-  print_status ("Copyright (C) 2010 ManTech International Corporation");
+  print_status ("Copyright (C) 2011 Kyrus Technology");
   print_status ("");
-  print_status ("Usage: %s [-m file] [-k file] [-2vprdsblcxa] [-t val] [-h|-V] [FILES]", 
+  print_status ("Usage: %s [-m file] [-k file] [-3vprdsblcxa] [-t val] [-h|-V] [FILES]", 
 	  __progname);
 
   print_status ("-m - Match FILES against known hashes in file");
   print_status ("-k - Match signatures in FILES against signatures in file");
-  print_status ("-2 - Only compute two hashes per file, for compatibility with older versions");
+  print_status ("-3 - Compute three hashes per file for better matches on small files");
 
   print_status ("-v - Verbose mode. Displays filename as its being processed");
   print_status ("-p - Pretty matching mode. Similar to -d but includes all matches");
@@ -58,11 +59,11 @@ static void usage(void)
 static void process_cmd_line(state *s, int argc, char **argv)
 {
   int i, match_files_loaded = FALSE;
-  while ((i=getopt(argc,argv,"2avhVpdsblcxt:rm:k:")) != -1) {
+  while ((i=getopt(argc,argv,"3avhVpdsblcxt:rm:k:")) != -1) {
     switch(i) {
 
-    case '2':
-      s->mode |= mode_compute_two;
+    case '3':
+      s->mode |= mode_compute_three;
       break;
 
     case 'a':

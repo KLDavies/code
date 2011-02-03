@@ -78,8 +78,8 @@ int hash_file(state *s, TCHAR *fn)
   {
     if (s->first_file_processed)
     {
-      if (MODE(mode_compute_two))
-	printf ("%s%s", SSDEEPV1_1_HEADER,NEWLINE);
+      if (MODE(mode_compute_three))
+	printf ("%s%s", SSDEEPV1_0_DC3_HEADER,NEWLINE);
       else
 	printf ("%s%s", OUTPUT_FILE_HEADER,NEWLINE);
       s->first_file_processed = FALSE;

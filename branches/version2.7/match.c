@@ -133,8 +133,7 @@ int sig_file_open(state *s, char * fn, file_info_t * info)
   
   if (strncmp(str,SSDEEPV1_0_HEADER,strlen(SSDEEPV1_0_HEADER)) &&
       strncmp(str,SSDEEPV1_0_DC3_HEADER,strlen(SSDEEPV1_0_DC3_HEADER)) &&
-      strncmp(str,SSDEEPV1_1_HEADER,strlen(SSDEEPV1_1_HEADER)) &&
-      strncmp(str,SSDEEPV1_2_HEADER,strlen(SSDEEPV1_2_HEADER)))
+      strncmp(str,SSDEEPV1_1_HEADER,strlen(SSDEEPV1_1_HEADER)))
   {
     if (!MODE(mode_silent))
       print_error(s,"%s: Invalid file header.", fn);

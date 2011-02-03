@@ -1,10 +1,10 @@
-.TH SSDEEP "1" "Version 2.6 \- 28 Sep 2010" "ManTech International" "ManTech International"
+.TH SSDEEP "1" "Version 2.7 \- RBF DATE" "Kyrus Technology" "Kyrus Technology"
 
 .SH NAME
 ssdeep - Computes context triggered piecewise hashes
 
 .SH SYNOPSIS
-.B ssdeep [-m <file>] [-k <file>] [-vprdsblcxa] [-t val] [FILES]
+.B ssdeep [-m <file>] [-k <file>] [-3vprdsblcxa] [-t val] [FILES]
 .br
 .B ssdeep [-V|h] 
 
@@ -37,11 +37,20 @@ input FILES should contain fuzzy hashes already. This flag can be
 used multiple times to load more known signatures.
 May not be used with the \-m or \-x flags.
 
+RBF - Better document the -k and -x modes
+
+
+.TP
+\fB\-3\fR
+Computes hashes for three block sizes instead of two. This allows for
+better matching of smaller files. Hashes produced with the -3 flag are
+compatible with the DC3 branch of the program, but cannot be used with
+the any version of the trunk code prior to version 2.7. 
+
 .TP
 \fB\-v\fR
 Verbose mode. The name of each file is printed to standard error
 as it is being hashed.
-
 
 .TP
 \fB\-p\fR
@@ -127,13 +136,14 @@ things like being unable to load the matching file, specifying
 both bare and relative paths, etc.
 
 .SH AUTHOR
-ssdeep was written by Jesse Kornblum, ManTech International Corporation
+ssdeep was written by Jesse Kornblum, Kyrus Technology
 .br
-research (%at%) jessekornblum dott com
+jessek@kyr.us
 
 .PP
 .SH COPYRIGHT
-This program is Copyright (C) 2006-2010 ManTech International Corporation
+This program is Copyright (C) 2006-2010 ManTech International Corporation, 
+Copyright (C) 2011 Kyrus Technology, 
 and is licensed under the terms of the General Public License. See the 
 file COPYING for details.
 

@@ -112,8 +112,8 @@
 #define SSDEEPV1_0_HEADER      "ssdeep,1.0--blocksize:hash:hash,filename"
 #define SSDEEPV1_1_HEADER      "ssdeep,1.1--blocksize:hash:hash,filename"
 #define SSDEEPV1_0_DC3_HEADER  "ssdeep,1.0.DC3.0--blocksize:hash:hash,filename"
-#define SSDEEPV1_2_HEADER      "ssdeep,1.2--blocksize:hash:hash[:hash],filename"
-#define OUTPUT_FILE_HEADER     SSDEEPV1_2_HEADER
+
+#define OUTPUT_FILE_HEADER     SSDEEPV1_1_HEADER
 
 
 #define MD5DEEP_ALLOC(TYPE,VAR,SIZE)     \
@@ -206,7 +206,7 @@ int getopt(int argc, char *const argv[], const char *optstring);
 #define mode_sigcompare       1<<10
 #define mode_display_all      1<<11
 #define mode_compare_unknown  1<<12
-#define mode_compute_two      1<<13
+#define mode_compute_three    1<<13
 
 #define MODE(A)   (s->mode & A)
 

@@ -1,3 +1,13 @@
+2011-02-02 Jesse Kornblum
+
+	* Added -3 mode to compute hashes for three block sizes instead
+	  of the default two. This makes the program compatible with the
+	  DC3 branch.
+
+	* Added support to read and parse hashes with three block sizes.
+	  This makes the program compatible with the DC3 branch.
+	
+
 2010-07-15 Jesse Kornblum
 
 	* Added quotes and quote escaping to filenames when
