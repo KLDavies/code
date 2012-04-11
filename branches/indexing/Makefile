@@ -9,8 +9,11 @@ OBJ = main.o helpers.o
 
 all = $(GOAL)
 
+fast: CXXFLAGS = -W -Wall -O3
+fast: $(GOAL)
+
 test: $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $(GOAL) $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $(GOAL) $(OBJ) -lfuzzy
 
 nice:
 	rm -f *~
