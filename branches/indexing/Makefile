@@ -1,15 +1,16 @@
-CXX = g++
-CXXFLAGS = -W -Wall -O0 -ggdb
+#CXX = g++
+#CXXFLAGS = -W -Wall -O0 -ggdb
 
-#CXX=clang
-#CXXFLAGS = -O0 -g
+CXX=clang++
+CXXFLAGS = -O0 -g
 
 GOAL = test
 OBJ = main.o helpers.o
 
-all = $(GOAL)
+all: $(GOAL)
 
-fast: CXXFLAGS = -W -Wall -O3
+#fast: CXXFLAGS = -W -Wall -O3
+fast: CXXFLAGS = -O4
 fast: $(GOAL)
 
 test: $(OBJ)
