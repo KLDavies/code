@@ -16,10 +16,10 @@ int _CRT_fmode = _O_BINARY;
 #endif
 
 
-static int initialize_state(state *s)
+static bool initialize_state(state *s)
 {
-  if (match_init(s))
-    return TRUE;
+  if (NULL == s)
+    return true;
 
   s->mode                  = mode_none;
   s->first_file_processed  = TRUE;
@@ -28,7 +28,9 @@ static int initialize_state(state *s)
 
   s->threshold = 0;
 
-  return FALSE;
+  s->next_match_id = 0;
+
+  return false;
 }
 
 
@@ -252,10 +254,7 @@ int main(int argc, char **argv)
   //  __progname  = basename(argv[0]);
 #endif
 
-  s = (state *)malloc(sizeof(state));
-  if (NULL == s)
-    fatal_error("%s: Unable to allocate state variable", __progname);
-
+  s = new state;
   if (initialize_state(s))
     fatal_error("%s: Unable to initialize state variable", __progname);
 
@@ -335,8 +334,8 @@ int main(int argc, char **argv)
     s->mode |= mode_match_pretty;
   if (s->mode & mode_match_pretty)
     match_pretty(s);
-  if (s->mode & mode_cluster)
-    display_clusters(s);
+  //  if (s->mode & mode_cluster)
+  //    display_clusters(s);
 
   return (EXIT_SUCCESS);
 }

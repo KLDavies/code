@@ -20,207 +20,254 @@
 
 #include "ssdeep.h"
 
-
 // The longest line we should encounter when reading files of known hashes 
 #define MAX_STR_LEN  2048
 
-
-// ------------------------------------------------------------------
-// LINKED LIST FUNCTIONS
-// ------------------------------------------------------------------
-
-static
-int lsh_list_init(lsh_list *l)
-{
-  if (NULL == l)
-    return TRUE;
-
-  l->size   = 0;
-  l->top    = NULL;
-  l->bottom = NULL;
-  return FALSE;
-}
-
-// Insert a signature from the file match_file into the list l.
-// The value consists of the filename fn and the hash value sum.
-static 
-int lsh_list_insert(state    * s, 
-		    char     * match_file, 
-		    lsh_list * l, 
-		    const TCHAR    * fn, 
-		    const char     * sum)
-{
-  lsh_node *new_node;
-
-  if (NULL == s || NULL == l || NULL == fn || NULL == sum)
-    return TRUE;
-
-  if ((new_node = (lsh_node *)malloc(sizeof(lsh_node))) == NULL)
-    fatal_error("%s: Out of memory", __progname);
-
-  new_node->cluster = 0;
-  new_node->next    = NULL;
-  if (((new_node->hash = strdup(sum)) == NULL) ||
-      ((new_node->fn   = _tcsdup(fn))  == NULL))
-  {
-    print_error(s,"%s: out of memory", __progname);
-    return TRUE;
-  }
-  if (match_file != NULL)
-  {
-    new_node->match_file = strdup(match_file);
-    if (NULL == new_node->match_file)
-    {
-      print_error(s,"%s: out of memory", __progname);
-      return TRUE;
-    }
-  }
-  else
-    new_node->match_file = NULL;
-
-  if (l->bottom == NULL)
-  {
-    if (l->top != NULL)
-      fatal_error("%s: internal data structure inconsistency", fn);
-
-    l->top = new_node;
-    l->bottom = new_node;
-    l->size += 1;
-    return FALSE;
-  }
-  
-  l->bottom->next = new_node;
-  l->bottom = new_node;
-  l->size += 1;
-  return FALSE;
-}
+#define MIN_SUBSTR_LEN 7
 
 // ------------------------------------------------------------------
 // SIGNATURE FILE FUNCTIONS
 // ------------------------------------------------------------------
 
-typedef struct _file_info_t
-{  
-  FILE  * handle;
-  TCHAR known_file_name[MAX_STR_LEN];
-  char  known_hash[MAX_STR_LEN];
-} file_info_t;
-
-// Open a signature file and determine if it contains a valid header
-// Returns TRUE on an error, otherwise FALSE.
+/// Open a file of known hashes and determine if it's valid
+///
+/// @param s State variable
+/// @param handle Receives pointer to open file RBF
+/// @param fn filename to open
+/// 
+/// @return RBF eturns true on errror, false on success.
 static
-int sig_file_open(state *s, char * fn, file_info_t * info)
+FILE * sig_file_open(state *s, const char * fn)
 {
-  char str[MAX_STR_LEN];
+  char buffer[MAX_STR_LEN];
 
-  if (NULL == s || NULL == fn || NULL == info)
-    return TRUE;
+  if (NULL == fn)
+    return NULL;
 
-  info->handle = fopen(fn,"rb");
-  if (NULL == info->handle)
+  FILE * handle = fopen(fn,"rb");
+  if (NULL == handle)
   {
-    if (!(MODE(mode_silent)))
+    if ( ! (MODE(mode_silent)) )
       perror(fn);
-    return TRUE;
+    return NULL;
   }
 
   // The first line should be the header. We don't need to chop it
   // as we're only comparing it to the length of the known header.
-  if (NULL == fgets(str,MAX_STR_LEN,info->handle))
+  if (NULL == fgets(buffer,MAX_STR_LEN,handle))
   {
-    if (!(MODE(mode_silent)))
+    if ( ! (MODE(mode_silent)) )
       perror(fn);
-    fclose(info->handle);
-    return TRUE;
+    fclose(handle);
+    return NULL;
   }
 
-  if (strncmp(str,SSDEEPV1_0_HEADER,strlen(SSDEEPV1_0_HEADER)) &&
-      strncmp(str,SSDEEPV1_1_HEADER,strlen(SSDEEPV1_1_HEADER)))
+  if (strncmp(buffer,SSDEEPV1_0_HEADER,strlen(SSDEEPV1_0_HEADER)) &&
+      strncmp(buffer,SSDEEPV1_1_HEADER,strlen(SSDEEPV1_1_HEADER)))
   {
-    if (!MODE(mode_silent))
-      print_error(s,"%s: invalid file header: %s!!", fn, str);
-    fclose(info->handle);
-    return TRUE;
+    if ( ! (MODE(mode_silent)) )
+      print_error(s,"%s: Invalid file header.", fn);
+    fclose(handle);
+    return NULL;
   }
 
-  return FALSE;
-}
-  
-
-// Close a signature file
-static
-void sig_file_close(file_info_t * info)
-{
-  if (NULL == info)
-    return;
-
-  fclose(info->handle);
+  return handle;
 }
 
 
-// Read the next entry in a signature file and store it in the structure 'info'
-// If there is no next entry (EOF) or an error occurs, returns TRUE,
-// otherwise FALSE.
-static
-int sig_file_next(state *s, file_info_t * info)
+bool str_to_filedata(state *s, const char * buffer, filedata_t *f)
 {
-  char str[MAX_STR_LEN];
+  // Set the id first, so that if something goes wrong, we don't
+  // reuse the id number.
+  f->id = s->next_match_id;
+  s->next_match_id++;
 
-  if (NULL == s || NULL == info)
-    return TRUE;
+  // RBF - Do we need to remove the filename from the signature?
+  f->signature = std::string(buffer);
 
-  if (NULL == fgets(str,MAX_STR_LEN,info->handle))
-    return TRUE;
-  
-  chop_line(str);
+  // Find the blocksize
+  size_t found;
+  found = f->signature.find(':');
+  if (found == std::string::npos)
+    return true;
+  // RBF - Wider bitwidth?
+  f->blocksize = atoi(f->signature.substr(0,found).c_str());
+  //  cout << "blocksize = " << f->blocksize << endl;
 
-  // The file format is:
-  //     hash,"filename"
+  // Find the two signature components
+  size_t start = found + 1;
+  found = f->signature.find(":",found+1);
+  if (found == std::string::npos)
+    return true;
 
-  strncpy(info->known_hash,str,MIN(MAX_STR_LEN,strlen(str)));
-  find_comma_separated_string(info->known_hash,0);
-  find_comma_separated_string(str,1);
+  f->s1 = f->signature.substr(start,found - start);
 
-  // Remove escaped quotes from the filename
-  remove_escaped_quotes(str);
-  
+  start = found+1;
+  found = f->signature.find(",",found+1);
+  if (found == std::string::npos)
+    return true;
+
+  f->s2 = f->signature.substr(start, found - start);
+
+  // RBF - Remove quotes from the ends of strings
+
+#ifndef _WIN32
+  f->filename = strdup(f->signature.substr(found + 1).c_str());
+  remove_escaped_quotes(f->filename);
+#else
+  char * tmp = f->signature.substr(found + 1).c_str();
+  remove_escaped_quotes(tmp);
   // On Win32 we have to do a kludgy cast from ordinary char 
   // values to the TCHAR values we use internally. Because we may have
   // reset the string length, get it again.
-  size_t i, sz = strlen(str);
+  size_t i, sz = strlen(tmp);
+  f->filename = (char *)malloc(sizeof(char) * sz);
+  // RBF - error checking
   for (i = 0 ; i < sz ; i++)
-  {
-#ifdef _WIN32
-    info->known_file_name[i] = (TCHAR)(str[i]);
-#else
-    info->known_file_name[i] = str[i];
+    f->filename[i] = (TCHAR)(tmp[i]);
+  f->filename[i] = 0;
 #endif
-  }
-  info->known_file_name[i] = 0;
-   
-  return FALSE;
+
+  return false;
 }
+
+
+/// Read the next entry in a file of known hashes
+///
+/// @param s State variable (RBF - Do we need this?)
+/// @param handle File handle to read from
+/// @param fn Filename of known hashes
+/// @param f Structure where to store read data
+///
+/// @return Returns true if there is no entry to read or on error. Otherwise, false.
+static
+bool sig_file_next(state *s, FILE * handle, char * fn, filedata_t * f)
+{
+  if (NULL == s || NULL == fn || NULL == f || NULL == handle)
+    return true;
+
+  char buffer[MAX_STR_LEN];
+  memset(buffer,0,MAX_STR_LEN);
+  if (NULL == fgets(buffer,MAX_STR_LEN,handle))
+    return true;
+
+  chop_line(buffer);
+  
+  f->match_file = std::string(fn);
+
+  return str_to_filedata(s,buffer,f);
+}
+
+
+bool sig_file_close(FILE * handle)
+{
+  if (handle != NULL) 
+    fclose(handle);
+  
+  return false;
+}
+
 
 
 // ------------------------------------------------------------------
 // MATCHING FUNCTIONS
 // ------------------------------------------------------------------
 
-int match_init(state *s)
-{
-  if (NULL == s)
-    return TRUE;
 
-  s->known_hashes = (lsh_list *)malloc(sizeof(lsh_list));
-  if (s->known_hashes == NULL)
-    return TRUE;
-  
-  lsh_list_init(s->known_hashes);  
-  return FALSE;
+void handle_match(state *s, const char * fn, const char * match_file, filedata_t * match, int score)
+{
+  if (s->mode & mode_csv)
+  {
+    printf("\"");
+    display_filename(stdout,fn,TRUE);
+    printf("\",\"");
+    display_filename(stdout,match->filename,TRUE);
+    print_status("\",%"PRIu32, score);
+  }
+  else
+  {
+    if (strlen(match_file) > 0)
+      printf ("%s:", match_file);
+    display_filename(stdout,fn,FALSE);
+    printf(" matches ");
+    if (strlen(match->match_file.c_str()) > 0)
+      printf ("%s:", match->match_file.c_str());
+    display_filename(stdout,match->filename,FALSE);
+    print_status(" (%"PRIu32")", score);
+  }
 }
 
-#define STRINGS_EQUAL(A,B)    !_tcsncmp(A,B,MAX(_tcslen(A),_tcslen(B)))
 
+
+// Match the file named fn with the hash sum against the set of knowns
+// Display any matches. 
+/// @return Returns false if there are no matches, true if at least one match
+/// @param s State variable
+/// @param match_file Filename where we got the hash of the unknown file.
+///                   May be NULL.
+/// @param fn Filename of the unknown file we are comparing
+/// @param sum Fuzzy hash of the unknown file we are comparing
+bool match_compare(state *s, 
+		   const char * match_file, 
+		   TCHAR *fn, 
+		   const char *sum)
+{
+  if (NULL == s || NULL == fn || NULL == sum)
+    fatal_error("%s: Null values passed into match_compare", __progname);
+
+  bool status = false;
+  std::set<uint64_t> visited;
+  
+  std::string sig = std::string(sum);
+
+  size_t end = 0;
+  if (sig.size() >= MIN_SUBSTR_LEN)
+    end = sig.size() - MIN_SUBSTR_LEN + 1;
+
+  // RBF - Do we need to do anything for match_pretty here? 
+  // We did in the old version
+
+  for (size_t pos = 0 ; pos < end ; ++pos)
+  {
+    std::string sub = sig.substr(pos,MIN_SUBSTR_LEN);
+    index_t::const_iterator it = s->index.find(sub);
+    if (s->index.end() == it)
+      continue;
+
+    std::set<filedata_t *>::const_iterator match_it;
+    for (match_it = it->second.begin() ; 
+	 match_it != it->second.end() ; 
+	 ++match_it)
+    {
+      // If we've compared these two ids before, skip them.
+      if (visited.count((*match_it)->id) != 0)
+	continue;
+      
+      int score =  fuzzy_compare(sum, (*match_it)->signature.c_str());
+      if (-1 == score)
+      {
+	print_error(s, "%s: Bad hashes in comparison", __progname);
+      }
+      else
+      {
+	if (score > s->threshold || MODE(mode_display_all))
+	{
+	  handle_match(s,fn,match_file,(*match_it),score);
+	  status = true;
+	}
+      }
+
+      visited.insert((*match_it)->id);
+    }
+  }
+  
+  return status;
+}
+
+  
+
+
+  /*
 // Match the file named fn with the hash sum against the set of knowns
 // Display any matches. 
 // Return FALSE is there are no matches, TRUE if at least one match
@@ -302,14 +349,27 @@ int match_compare(state *s, char * match_file, const TCHAR *fn, const char *sum)
 
   return status;
 }
+  */
 
-int match_pretty(state *s)
+
+bool match_pretty(state *s)
 {
   if (NULL == s)
-    return TRUE;
+    return true;
 
-  lsh_node *tmp = s->known_hashes->top;
+  // Walk the index
+  std::vector<filedata_t *>::iterator it;
+  for (it = s->all_files.begin() ; it != s->all_files.end() ; ++it)
+  {
+    if (match_compare(s,
+		      (*it)->match_file.c_str(),
+		      (*it)->filename,
+		      (*it)->signature.c_str()))
+      print_status("");
+  }
 
+
+  /*
   while (tmp != NULL)
   {
     if (match_compare(s,tmp->match_file,tmp->fn,tmp->hash))
@@ -317,63 +377,285 @@ int match_pretty(state *s)
 
     tmp = tmp->next;
   }
+  */
 
-  return FALSE;
+  return false;
 }
 
-int match_add(state *s, char * match_file, const TCHAR *fn, const char *hash)
-{
-  return (lsh_list_insert(s,match_file,s->known_hashes,fn,hash));
-}
+
 
 
   
-int match_load(state *s, char *fn)
+/// Add a fuzzy signature to the index
+///
+/// @param s State variable
+/// @param f File data for the file to add
+/// @param sig Signature component to add. Should be f.s1 or f.s2
+bool add_known_sig(state *s, filedata_t *f, std::string sig)
 {
-  file_info_t info;
-  int status = FALSE;
+  // RBF - What happens when sig.size < MIN_SUBSTR_LEN?? Can we match at all?
+  size_t end = 0;
+  if (sig.size() > MIN_SUBSTR_LEN)  
+    end = sig.size() - MIN_SUBSTR_LEN + 1;
 
-  if (NULL == s || NULL == fn)
-    return TRUE;
-
-  if (sig_file_open(s,fn,&info))
-    return TRUE;
-
-  while ( ! sig_file_next(s,&info))
+  for (size_t pos = 0 ; pos < end ; ++pos)
   {
-    if (match_add(s,fn,info.known_file_name,info.known_hash))
+    std::string substring = sig.substr(pos,MIN_SUBSTR_LEN);
+    index_t::iterator it = s->index.find(substring);
+    if (s->index.end() == it)
     {
-      // If we can't insert this value, we're probably out of memory.
-      // There's no sense trying to read the rest of the file.
-      print_error(s,"%s: unable to insert hash", fn);
-      status = TRUE;
-      break;
+      // This substring is not in the index. Add it and a pointer
+      // to the current file.
+      std::set<filedata_t *> tmp;
+      tmp.insert(f);
+      s->index.insert(std::pair<std::string,std::set<filedata_t *> >(substring,tmp));
+    }
+    else
+    {
+      // This substring is in the index. Add a pointer to the current
+      // file to the existing value.
+      it->second.insert(f);
     }
   }
 
-  sig_file_close(&info);
+  return false;
+}
+
+
+/// Add a file to the set of known files
+///
+/// @param s State variable
+/// @param f File data for the file to add
+bool add_known_file(state *s, filedata_t *f)
+{
+  add_known_sig(s,f,f->s1);
+  add_known_sig(s,f,f->s2);
+
+  s->all_files.push_back(f);
+
+  return false;
+}
+
+
+// RBF - There has to be a better way to do this
+bool match_add(state *s, char * match_file, TCHAR *fn, char *hash)
+{
+  filedata_t * f = new filedata_t;
+
+  str_to_filedata(s,hash,f);
+  f->filename = strdup(fn);
+  f->match_file = std::string(match_file);
+
+  add_known_file(s,f);
+
+  return false;
+}
+
+
+
+
+bool match_load(state *s, char *fn)
+{
+  if (NULL == s || NULL == fn)
+    return true;
+
+  bool status = false;
+  FILE * handle = sig_file_open(s,fn);
+  if (NULL == handle)
+    return true;
+
+  filedata_t * f = new filedata_t;
+
+  uint64_t line_number = 1;
+
+  while ( ! sig_file_next(s,handle,fn,f) )
+  {
+    if (add_known_file(s,f))
+    {
+      print_error(s,"%s: unable to insert hash", fn);
+      status = true;
+      break;
+    }
+
+    f = new filedata_t;
+
+    ++line_number;
+  }
+
+  sig_file_close(handle);
 
   return status;
 }
 
 
-int match_compare_unknown(state *s, char * fn)
+bool match_compare_unknown(state *s, char * fn)
 { 
-  file_info_t info;
-
   if (NULL == s || NULL == fn)
-    return TRUE;
+    return true;
 
-  if (sig_file_open(s,fn,&info))
-    return TRUE;
+  FILE * handle = sig_file_open(s,fn);
+  if (NULL == handle)
+    return true;
 
-  while ( ! sig_file_next(s,&info))
-    match_compare(s,fn,info.known_file_name,info.known_hash);
+  filedata_t f;
+  
+  while ( ! sig_file_next(s,handle,fn,&f))
+  {
+    match_compare(s,fn,f.filename,f.signature.c_str());
+  }
 
-  sig_file_close(&info);
+  sig_file_close(handle);
 
   return FALSE;
 }
+
+
+
+
+
+
+
+
+
+
+
+// RBF - Set the match file!
+/*
+bool load_known_hash(state * s, filedata_t * f)
+{
+  char buffer[MAX_STR_LEN];
+
+  if (NULL == f)
+    return true;
+
+  // Set the id first, so that if something goes wrong, we don't
+  // reuse the id number.
+  f->id = s->next_match_id;
+  s->next_match_id++;
+
+  f->signature = std::string(buffer);
+
+  // Find the blocksize
+  size_t found;
+  found = f->signature.find(':');
+  if (found == std::string::npos)
+    return true;
+
+  // RBF - Wider bitwidth?
+  f->blocksize = atoi(f->signature.substr(0,found).c_str());
+  //  cout << "blocksize = " << f->blocksize << endl;
+
+  size_t start = found + 1;
+
+  found = f->signature.find(":",found+1);
+  if (found == std::string::npos)
+    return true;
+
+  f->s1 = f->signature.substr(start,found - start);
+
+  start = found+1;
+  found = f->signature.find(",",found+1);
+  if (found == std::string::npos)
+    return true;
+
+  f->s2 = f->signature.substr(start, found - start);
+
+  // RBF - Need to strip quotes from filename
+  f->filename = f->signature.substr(found + 1);
+
+  return false;
+}
+
+
+int match_insert
+{
+  filedata_t * f = new filedata_t;
+  if (NULL == f)
+  {
+    // RBF - Error handling
+    // cerr << "Out of memory!" << endl;
+    return true;
+  }
+
+  load_
+
+  // Does this new file match any of the existing files?
+  // RBF - Handle this functionality?
+  //  lookup(s,*f);
+  
+  add_indexes(s,f,f->s1);
+  add_indexes(s,f,f->s2);
+
+  // RBF - Do we need a non-indexed vector of all of the files? 
+  //s.all_files.push_back(f);
+  */
+
+
+
+
+
+
+
+  /*
+/// Loads known fuzzy hashes from the disk and stores them in the state
+///
+/// @param s State variable
+/// @param handle Open file handle to the known hashes. Should be pointing
+/// to the first hash in the file. (That is, not the header)
+///
+/// @return Returns false on success, true on error.
+bool load_known_hashes(state *s, FILE * handle)
+{
+  char buffer[MAX_STR_LEN];
+
+  // The first line was the header
+  uint64_t line_number = 1;
+
+  while (!feof(handle))
+  {
+    if (NULL == fgets(buffer,MAX_STR_LEN,handle))
+    {
+      // There is no error if we hit the end of the file.
+      return ( ! feof(handle) );
+    }
+
+    chop_line(buffer);
+
+    filedata_t * f = new filedata_t;
+    if (NULL == f)
+    {
+      // RBF - Error handling
+      // cerr << "Out of memory!" << endl;
+      return true;
+    }
+
+    if (load_known_hash(s,buffer,f))
+    {
+      // RBF - Error handling
+      //cerr << "Invalid hash in line " << line_number << endl;
+    }
+
+    
+
+    ++line_number;
+  }
+
+  //  cerr << "Index size = " << s.index.size() << endl;
+  return false;
+}
+  */
+
+
+
+
+
+
+
+
+
+
+
+/*
 
 
 int combine_clusters(state *s, lsh_node *a, lsh_node *b, uint64_t next_cluster)
@@ -463,3 +745,4 @@ int display_clusters(state *s)
 
   return FALSE;
 }
+*/
