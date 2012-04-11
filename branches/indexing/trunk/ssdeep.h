@@ -28,11 +28,6 @@ char *__progname;
 #include "fuzzy.h"
 #include "tchar-local.h"
 
-#ifndef HAVE_FSEEKO
-# define fseeko fseek
-# define ftello ftell
-#endif
-
 #define MM_INIT  printf
 
 #define SSDEEPV1_0_HEADER        "ssdeep,1.0--blocksize:hash:hash,filename"

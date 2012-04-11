@@ -107,10 +107,10 @@ void display_filename(FILE *out, const TCHAR *fn, int escape_quotes)
       // Windows can only display the English (00) code page
       // on the command line. 
       if (0 == (fn[pos] & 0xff00))
-	fputc(fn[pos]);
+	fputc(fn[pos],out);
       //	_ftprintf(out, _TEXT("%c"), fn[pos]);
       else 
-	fputc("?");
+	fputc('?',out);
       //	_ftprintf(out, _TEXT("?"));
     }
   }

@@ -87,6 +87,12 @@
 #endif
 
 
+#ifndef HAVE_FSEEKO
+# define fseeko fseek
+# define ftello ftell
+#endif
+
+
 #define FALSE  0
 #define TRUE   1
 

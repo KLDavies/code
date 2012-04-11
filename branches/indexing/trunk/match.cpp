@@ -115,13 +115,13 @@ bool str_to_filedata(state *s, const char * buffer, filedata_t *f)
   f->filename = strdup(f->signature.substr(found + 1).c_str());
   remove_escaped_quotes(f->filename);
 #else
-  char * tmp = f->signature.substr(found + 1).c_str();
+  char * tmp = strdup(f->signature.substr(found + 1).c_str());
   remove_escaped_quotes(tmp);
   // On Win32 we have to do a kludgy cast from ordinary char 
   // values to the TCHAR values we use internally. Because we may have
   // reset the string length, get it again.
   size_t i, sz = strlen(tmp);
-  f->filename = (char *)malloc(sizeof(char) * sz);
+  f->filename = (TCHAR *)malloc(sizeof(char) * sz);
   // RBF - error checking
   for (i = 0 ; i < sz ; i++)
     f->filename[i] = (TCHAR)(tmp[i]);
@@ -173,8 +173,12 @@ bool sig_file_close(FILE * handle)
 // MATCHING FUNCTIONS
 // ------------------------------------------------------------------
 
+// RBF - Kludge for Win32 inttypes.h
+#ifdef _WIN32
+#define PRIu32 "lx"
+#endif
 
-void handle_match(state *s, const char * fn, const char * match_file, filedata_t * match, int score)
+void handle_match(state *s, const TCHAR * fn, const char * match_file, filedata_t * match, int score)
 {
   if (s->mode & mode_csv)
   {
@@ -443,7 +447,7 @@ bool match_add(state *s, char * match_file, TCHAR *fn, char *hash)
   filedata_t * f = new filedata_t;
 
   str_to_filedata(s,hash,f);
-  f->filename = strdup(fn);
+  f->filename = _tcsdup(fn);
   f->match_file = std::string(match_file);
 
   add_known_file(s,f);
