@@ -56,21 +56,6 @@ memset(VAR,0,SIZE * sizeof(TYPE));
 #define file_unknown  254
 
 
-/* RBF - Remove vestigial code 
-typedef struct _lsh_node {
-  char    *hash;
-  TCHAR   *fn;
-  char    *match_file;
-  uint64_t cluster;
-  struct _lsh_node *next;
-} lsh_node;
-
-typedef struct {
-  lsh_node  *top, *bottom;
-  uint64_t size;
-} lsh_list;
-*/
-
 typedef struct 
 {
   uint64_t id;
@@ -78,8 +63,7 @@ typedef struct
   /// Original signature in the form [blocksize]:[sig1]:[sig2]
   std::string signature;
   
-  /// RBF - Does this need to be a larger bitwidth?
-  uint16_t blocksize;
+  uint64_t blocksize;
 
   /// Holds signature equal to blocksize
   std::string s1;
@@ -168,7 +152,7 @@ int getopt(int argc, char *const argv[], const char *optstring);
 #define mode_sigcompare   1<<10
 #define mode_display_all  1<<11
 #define mode_compare_unknown 1<<12
-#define mode_cluster      1<<13
+//#define mode_cluster      1<<13
 
 #define MODE(A)   (s->mode & A)
 

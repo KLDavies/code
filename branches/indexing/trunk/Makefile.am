@@ -42,7 +42,7 @@ NEWS.TXT: NEWS
 	cp NEWS NEWS.TXT
 
 win-docs: $(WINDOWSDOCS)
-	flip -d $(WINDOWSDOCS)
+#	flip -d $(WINDOWSDOCS)
 #	unix2dos $(WINDOWSDOCS)
 
 win-package: win-docs
@@ -52,9 +52,9 @@ win-package: win-docs
 	$(STRIP) ssdeep.exe
 	mkdir $(distdir)
 	cp $(WINDOWSDOCS) ssdeep.exe fuzzy.dll fuzzy.def sample.c $(distdir)
-	flip -d $(distdir)/{sample.c,fuzzy.def}
+#	flip -d $(distdir)/{sample.c,fuzzy.def}
 #	unix2dos $(distdir)/{sample.c,fuzzy.def}
-	zip -r9 $(distdir).zip $(distdir)
+	zip -lr9 $(distdir).zip $(distdir)
 	rm -rf $(distdir) $(WINDOWSDOCS)
 
 world: distclean

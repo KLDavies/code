@@ -1,5 +1,5 @@
 // ssdeep
-// (C) Copyright 2012 ManTech International Corporation
+// (C) Copyright 2012 Kyrus
 //
 // $Id$
 //
@@ -32,16 +32,12 @@
 /// Open a file of known hashes and determine if it's valid
 ///
 /// @param s State variable
-/// @param handle Receives pointer to open file RBF
 /// @param fn filename to open
 /// 
-/// @return RBF eturns true on errror, false on success.
-static
+/// @return On success, returns the open file handle. On failure, returns NULL.
 FILE * sig_file_open(state *s, const char * fn)
 {
-  char buffer[MAX_STR_LEN];
-
-  if (NULL == fn)
+  if (NULL == s || NULL == fn)
     return NULL;
 
   FILE * handle = fopen(fn,"rb");
@@ -52,8 +48,8 @@ FILE * sig_file_open(state *s, const char * fn)
     return NULL;
   }
 
-  // The first line should be the header. We don't need to chop it
-  // as we're only comparing it to the length of the known header.
+  // The first line of the file should contain a valid ssdeep header. 
+  char buffer[MAX_STR_LEN];
   if (NULL == fgets(buffer,MAX_STR_LEN,handle))
   {
     if ( ! (MODE(mode_silent)) )
@@ -62,8 +58,10 @@ FILE * sig_file_open(state *s, const char * fn)
     return NULL;
   }
 
-  if (strncmp(buffer,SSDEEPV1_0_HEADER,strlen(SSDEEPV1_0_HEADER)) &&
-      strncmp(buffer,SSDEEPV1_1_HEADER,strlen(SSDEEPV1_1_HEADER)))
+  chop_line(buffer);
+
+  if (strncmp(buffer,SSDEEPV1_0_HEADER,MAX_STR_LEN) and 
+      strncmp(buffer,SSDEEPV1_1_HEADER,MAX_STR_LEN)) 
   {
     if ( ! (MODE(mode_silent)) )
       print_error(s,"%s: Invalid file header.", fn);
@@ -75,14 +73,20 @@ FILE * sig_file_open(state *s, const char * fn)
 }
 
 
+/// Convert a line of text from a file of known hashes into a filedata structure
+///
+/// @param s State variable
+/// @param buffer Buffer of text to parse
+/// @param f Where to store the converted data
+///
+/// @return Returns true on error, false on success.
 bool str_to_filedata(state *s, const char * buffer, filedata_t *f)
 {
-  // Set the id first, so that if something goes wrong, we don't
-  // reuse the id number.
+  // We do the id number first so that we always advance it, just in case.
+  // This code which updates the match_id is NOT THREAD SAFE!
   f->id = s->next_match_id;
   s->next_match_id++;
 
-  // RBF - Do we need to remove the filename from the signature?
   f->signature = std::string(buffer);
 
   // Find the blocksize
@@ -90,11 +94,9 @@ bool str_to_filedata(state *s, const char * buffer, filedata_t *f)
   found = f->signature.find(':');
   if (found == std::string::npos)
     return true;
-  // RBF - Wider bitwidth?
-  f->blocksize = atoi(f->signature.substr(0,found).c_str());
-  //  cout << "blocksize = " << f->blocksize << endl;
+  f->blocksize = (uint64_t)atoll(f->signature.substr(0,found).c_str());
 
-  // Find the two signature components
+  // Find the two signature components s1 and s2
   size_t start = found + 1;
   found = f->signature.find(":",found+1);
   if (found == std::string::npos)
@@ -109,20 +111,30 @@ bool str_to_filedata(state *s, const char * buffer, filedata_t *f)
 
   f->s2 = f->signature.substr(start, found - start);
 
-  // RBF - Remove quotes from the ends of strings
+  // Remove quotes from the ends of strings, if present
+  std::string tmp = f->signature.substr(found+1);
+  if (tmp[0] == '"')
+  {
+    // We assume quoted filenames are quoted at both ends,
+    // but check just to make sure.
+    tmp.erase(0,1);
+    if (tmp[tmp.size()-1] == '"')
+      tmp.erase(tmp.size()-1,1);
+  }
 
 #ifndef _WIN32
-  f->filename = strdup(f->signature.substr(found + 1).c_str());
+  f->filename = strdup(tmp.c_str());
   remove_escaped_quotes(f->filename);
 #else
-  char * tmp = strdup(f->signature.substr(found + 1).c_str());
-  remove_escaped_quotes(tmp);
+  char * tmp2 = strdup(tmp.c_str());
+  remove_escaped_quotes(tmp2);
   // On Win32 we have to do a kludgy cast from ordinary char 
   // values to the TCHAR values we use internally. Because we may have
   // reset the string length, get it again.
-  size_t i, sz = strlen(tmp);
+  size_t i, sz = strlen(tmp2);
   f->filename = (TCHAR *)malloc(sizeof(char) * sz);
-  // RBF - error checking
+  if (NULL == f->filename)
+    return true;
   for (i = 0 ; i < sz ; i++)
     f->filename[i] = (TCHAR)(tmp[i]);
   f->filename[i] = 0;
@@ -132,15 +144,15 @@ bool str_to_filedata(state *s, const char * buffer, filedata_t *f)
 }
 
 
-/// Read the next entry in a file of known hashes
+
+/// Read the next entry in a file of known hashes and convert it to a filedata structure
 ///
-/// @param s State variable (RBF - Do we need this?)
-/// @param handle File handle to read from
+/// @param s State variable
+/// @param handle File handle to read from. Should have previously been opened by sig_file_open()
 /// @param fn Filename of known hashes
-/// @param f Structure where to store read data
+/// @param f Structure where to store the data we read
 ///
 /// @return Returns true if there is no entry to read or on error. Otherwise, false.
-static
 bool sig_file_next(state *s, FILE * handle, char * fn, filedata_t * f)
 {
   if (NULL == s || NULL == fn || NULL == f || NULL == handle)
@@ -173,12 +185,11 @@ bool sig_file_close(FILE * handle)
 // MATCHING FUNCTIONS
 // ------------------------------------------------------------------
 
-// RBF - Kludge for Win32 inttypes.h
-#ifdef _WIN32
-#define PRIu32 "lx"
-#endif
-
-void handle_match(state *s, const TCHAR * fn, const char * match_file, filedata_t * match, int score)
+void handle_match(state *s, 
+		  const TCHAR * fn, 
+		  const char * match_file, 
+		  filedata_t * match, 
+		  int score)
 {
   if (s->mode & mode_csv)
   {
@@ -186,10 +197,12 @@ void handle_match(state *s, const TCHAR * fn, const char * match_file, filedata_
     display_filename(stdout,fn,TRUE);
     printf("\",\"");
     display_filename(stdout,match->filename,TRUE);
-    print_status("\",%"PRIu32, score);
+    print_status("\",%u", score);
   }
   else
   {
+    // The match file names may be empty. If so, we don't print them
+    // or the colon which separates them from the filename
     if (strlen(match_file) > 0)
       printf ("%s:", match_file);
     display_filename(stdout,fn,FALSE);
@@ -197,18 +210,18 @@ void handle_match(state *s, const TCHAR * fn, const char * match_file, filedata_
     if (strlen(match->match_file.c_str()) > 0)
       printf ("%s:", match->match_file.c_str());
     display_filename(stdout,match->filename,FALSE);
-    print_status(" (%"PRIu32")", score);
+    print_status(" (%u)", score);
   }
 }
 
 
 
-// Match the file named fn with the hash sum against the set of knowns
-// Display any matches. 
+// Match the file named fn with the hash sum against the set of knowns and display any matches. 
+//
 /// @return Returns false if there are no matches, true if at least one match
 /// @param s State variable
 /// @param match_file Filename where we got the hash of the unknown file.
-///                   May be NULL.
+///                   May be the empty string.
 /// @param fn Filename of the unknown file we are comparing
 /// @param sum Fuzzy hash of the unknown file we are comparing
 bool match_compare(state *s, 
@@ -249,12 +262,10 @@ bool match_compare(state *s,
       
       int score =  fuzzy_compare(sum, (*match_it)->signature.c_str());
       if (-1 == score)
-      {
 	print_error(s, "%s: Bad hashes in comparison", __progname);
-      }
       else
       {
-	if (score > s->threshold || MODE(mode_display_all))
+	if (score > s->threshold or MODE(mode_display_all))
 	{
 	  handle_match(s,fn,match_file,(*match_it),score);
 	  status = true;
@@ -356,12 +367,16 @@ int match_compare(state *s, char * match_file, const TCHAR *fn, const char *sum)
   */
 
 
+   // RBF-CRITICAL: -m causes crash on live Windows system
+
+
+
 bool match_pretty(state *s)
 {
   if (NULL == s)
     return true;
 
-  // Walk the index
+  // Walk the vector which contains all of the known files
   std::vector<filedata_t *>::iterator it;
   for (it = s->all_files.begin() ; it != s->all_files.end() ; ++it)
   {
@@ -371,17 +386,6 @@ bool match_pretty(state *s)
 		      (*it)->signature.c_str()))
       print_status("");
   }
-
-
-  /*
-  while (tmp != NULL)
-  {
-    if (match_compare(s,tmp->match_file,tmp->fn,tmp->hash))
-      print_status("");
-
-    tmp = tmp->next;
-  }
-  */
 
   return false;
 }
@@ -441,7 +445,6 @@ bool add_known_file(state *s, filedata_t *f)
 }
 
 
-// RBF - There has to be a better way to do this
 bool match_add(state *s, char * match_file, TCHAR *fn, char *hash)
 {
   filedata_t * f = new filedata_t;
@@ -469,9 +472,6 @@ bool match_load(state *s, char *fn)
     return true;
 
   filedata_t * f = new filedata_t;
-
-  uint64_t line_number = 1;
-
   while ( ! sig_file_next(s,handle,fn,f) )
   {
     if (add_known_file(s,f))
@@ -482,8 +482,6 @@ bool match_load(state *s, char *fn)
     }
 
     f = new filedata_t;
-
-    ++line_number;
   }
 
   sig_file_close(handle);

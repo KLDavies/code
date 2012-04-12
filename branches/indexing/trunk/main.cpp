@@ -1,5 +1,6 @@
 // Fuzzy Hashing by Jesse Kornblum
-// Copyright (C) 2012 ManTech International Corporation
+// Copyright (C) 2012 Kyrus
+// Copyright (C) 2010 ManTech International Corporation
 //
 // $Id$
 //
@@ -41,14 +42,13 @@ static void usage(void)
   print_status ("%s version %s by Jesse Kornblum", __progname, VERSION);
   print_status ("Copyright (C) 2012 ManTech International Corporation");
   print_status ("");
-  print_status ("Usage: %s [-m file] [-k file] [-gvprdsblcxa] [-t val] [-h|-V] [FILES]", 
+  print_status ("Usage: %s [-m file] [-k file] [-vprdsblcxa] [-t val] [-h|-V] [FILES]", 
 	  __progname);
 
   print_status ("-m - Match FILES against known hashes in file");
   print_status ("-k - Match signatures in FILES against signatures in file");
 
-  // RBF - Document -g mode in man page
-  print_status ("-g - Generate clusters of similar files");
+  //  print_status ("-g - Generate clusters of similar files");
 
   print_status ("-v - Verbose mode. Displays filename as its being processed");
   print_status ("-p - Pretty matching mode. Similar to -d but includes all matches");
@@ -71,12 +71,12 @@ static void usage(void)
 static void process_cmd_line(state *s, int argc, char **argv)
 {
   int i, match_files_loaded = FALSE;
-  while ((i=getopt(argc,argv,"gavhVpdsblcxt:rm:k:")) != -1) {
+  while ((i=getopt(argc,argv,"avhVpdsblcxt:rm:k:")) != -1) {
     switch(i) {
       
-    case 'g':
-      s->mode |= mode_cluster;
-      break;
+      //    case 'g':
+      //      s->mode |= mode_cluster;
+      //      break;
 
     case 'a':
       s->mode |= mode_display_all;
@@ -87,7 +87,7 @@ static void process_cmd_line(state *s, int argc, char **argv)
       {
 	print_error(s,"%s: Already at maximum verbosity", __progname);
 	print_error(s,
-		    "%s: Error message display to user correctly", 
+		    "%s: Error message displayed to user correctly", 
 		    __progname);
       }
       else
@@ -115,7 +115,7 @@ static void process_cmd_line(state *s, int argc, char **argv)
       s->mode |= mode_csv; break;
 
     case 'x':
-      if (MODE(mode_match) || MODE(mode_sigcompare))
+      if (MODE(mode_match) || MODE(mode_compare_unknown))
 	fatal_error("Signature matching cannot be combined with other matching modes");
       s->mode |= mode_sigcompare; break;
 
@@ -175,10 +175,10 @@ static void process_cmd_line(state *s, int argc, char **argv)
 	       ((s->mode & mode_match_pretty) && (s->mode & mode_directory)),
 	       "Directory mode and pretty matching are mutallty exclusive");
 
-  sanity_check(s,
-	       ((s->mode & mode_cluster) && (s->mode & mode_directory)) ||
-	       ((s->mode & mode_cluster) && (s->mode & mode_match_pretty)),
-	       "Clustering cannot be combined with directory or pretty matching");
+  //  sanity_check(s,
+  //	       ((s->mode & mode_cluster) && (s->mode & mode_directory)) ||
+  //	       ((s->mode & mode_cluster) && (s->mode & mode_match_pretty)),
+  //	       "Clustering cannot be combined with directory or pretty matching");
 
 }
 

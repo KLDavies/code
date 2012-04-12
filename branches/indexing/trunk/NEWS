@@ -1,8 +1,14 @@
 ** Version 2.8 - RBF DATE
 
+* New Features
+
+  - Ported to C++.
+  - Indexing of known hashes results in much faster matching
+
 * Bug Fixes
 
   - Fixed support for large files on some platforms.
+  - Better detection of improper headers in known files
 
 
 ** Version 2.7 - 30 Sep 2011

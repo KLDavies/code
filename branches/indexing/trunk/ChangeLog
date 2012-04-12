@@ -1,7 +1,12 @@
+2012-04-12 Jesse Kornblum <research@jessekornblum.com>:
+
+	* Makefile.am: LF to CR/LF change now done by zip program
+
 2012-04-11 Jesse Kornblum <research@jessekornblum.com>:
 
 	* Experimental conversion to C++
-
+	* Commented out all references to clustering
+	* main.cpp: Fixed some bugs in the command line argument processing
 
 2012-02-16 Jesse Kornblum <research@jessekornblum.com>:
 

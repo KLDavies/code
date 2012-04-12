@@ -1,4 +1,3 @@
-
 // $Id$ 
 
 #include "main.h"
@@ -8,7 +7,7 @@
 
 void display_result(state *s, TCHAR * fn, char * sum)
 {
-  if (MODE(mode_match_pretty) || MODE(mode_cluster))
+  if (MODE(mode_match_pretty)) // || MODE(mode_cluster))
   {
     if (match_add(s,"",fn,sum))
       print_error_unicode(s,fn,"Unable to add hash to set of known hashes");
@@ -23,6 +22,7 @@ void display_result(state *s, TCHAR * fn, char * sum)
   }
   else
   {
+    // No special options selected. Display the hash for this file
     if (s->first_file_processed)
     {
       printf ("%s%s", OUTPUT_FILE_HEADER,NEWLINE);

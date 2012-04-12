@@ -260,8 +260,8 @@ void shift_string(char *fn, size_t start, size_t new_start)
 }
 
 
-/* Find the index of the next comma in the string s starting at index start.
-   If there is no next comma, returns -1. */
+// Find the index of the next comma in the string s starting at index start.
+// If there is no next comma, returns -1
 int find_next_comma(char *s, unsigned int start)
 {
   size_t size=strlen(s);
@@ -278,11 +278,11 @@ int find_next_comma(char *s, unsigned int start)
 	if (in_quote)
 	  break;
 
-	/* Although it's potentially unwise to cast an unsigned int back
-         to an int, problems will only occur when the value is beyond 
-         the range of int. Because we're working with the index of a 
-         string that is probably less than 32,000 characters, we should
-         be okay. */
+	// Although it's potentially unwise to cast an unsigned int back
+	// to an int, problems will only occur when the value is beyond 
+	// the range of int. Because we're working with the index of a 
+	// string that is probably less than 32,000 characters, we should
+	// be okay.
 	return (int)pos;
       }
       ++pos;
@@ -291,9 +291,9 @@ int find_next_comma(char *s, unsigned int start)
 }
 
 
-/* Returns the string after the nth comma in the string s. If that
-   string is quoted, the quotes are removed. If there is no valid 
-   string to be found, returns TRUE. Otherwise, returns FALSE */
+/// Returns the string after the nth comma in the string s. If that
+/// string is quoted, the quotes are removed. If there is no valid 
+/// string to be found, returns TRUE. Otherwise, returns FALSE 
 int find_comma_separated_string(char *s, unsigned int n)
 {
   int start = 0, end;
@@ -307,14 +307,14 @@ int find_comma_separated_string(char *s, unsigned int n)
       ++start;
     }
 
-  /* It's okay if there is no next comma, it just means that this is
-     the last comma separated value in the string */
+  // It's okay if there is no next comma, it just means that this is
+  // the last comma separated value in the string 
   if ((end = find_next_comma(s,start)) == -1)
     end = strlen(s);
 
-  /* Strip off the quotation marks, if necessary. We don't have to worry
-     about uneven quotation marks (i.e quotes at the start but not the end
-     as they are handled by the the find_next_comma function. */
+  // Strip off the quotation marks, if necessary. We don't have to worry
+  // about uneven quotation marks (i.e quotes at the start but not the end
+  // as they are handled by the the find_next_comma function.
   if (s[start] == '"')
     ++start;
   if (s[end - 1] == '"')
