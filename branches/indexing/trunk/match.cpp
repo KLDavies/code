@@ -216,14 +216,6 @@ void handle_match(state *s,
 
 
 
-// Match the file named fn with the hash sum against the set of knowns and display any matches. 
-//
-/// @return Returns false if there are no matches, true if at least one match
-/// @param s State variable
-/// @param match_file Filename where we got the hash of the unknown file.
-///                   May be the empty string.
-/// @param fn Filename of the unknown file we are comparing
-/// @param sum Fuzzy hash of the unknown file we are comparing
 bool match_compare(state *s, 
 		   const char * match_file, 
 		   TCHAR *fn, 
@@ -367,10 +359,6 @@ int match_compare(state *s, char * match_file, const TCHAR *fn, const char *sum)
   */
 
 
-   // RBF-CRITICAL: -m causes crash on live Windows system
-
-
-
 bool match_pretty(state *s)
 {
   if (NULL == s)
@@ -391,9 +379,6 @@ bool match_pretty(state *s)
 }
 
 
-
-
-  
 /// Add a fuzzy signature to the index
 ///
 /// @param s State variable

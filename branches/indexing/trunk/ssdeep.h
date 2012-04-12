@@ -1,12 +1,13 @@
-
-/* Fuzzy Hashing by Jesse Kornblum
-   Copyright (C) 2008 ManTech International Corporation
-
-   $Id$ 
-*/
-
 #ifndef __SSDEEP_H
 #define __SSDEEP_H
+
+//
+// Fuzzy Hashing by Jesse Kornblum
+// Copyright (C) 2012 Kyrus
+// Copyright (C) 2008 ManTech International Corporation
+//
+// $Id$ 
+//
 
 #include "main.h"
 
@@ -76,10 +77,11 @@ typedef struct
   std::string match_file;
 } filedata_t;
 
+
 /// Indexing used for hashes of known files. 
-///
 /// We use a set to avoid duplicates in the index.
 typedef std::map<std::string,std::set<filedata_t *> > index_t;
+
 
 typedef struct {
   uint64_t  mode;
@@ -238,8 +240,18 @@ void display_filename(FILE *out, const TCHAR *fn, int escape_quotes);
 // Matching functions
 // *********************************************************************
 
-// See if the existing file and hash are in the set of known hashes
-bool match_compare(state *s, const char * match_file, TCHAR *fn, const char *sum);
+// Match the file named fn with the hash sum against the set of knowns and display any matches. 
+//
+/// @return Returns false if there are no matches, true if at least one match
+/// @param s State variable
+/// @param match_file Filename where we got the hash of the unknown file.
+///                   May be the empty string.
+/// @param fn Filename of the unknown file we are comparing
+/// @param sum Fuzzy hash of the unknown file we are comparing
+bool match_compare(state *s, 
+		   const char * match_file, 
+		   TCHAR *fn, 
+		   const char *sum);
 
 // Load a file of known hashes
 bool match_load(state *s, char *fn);
