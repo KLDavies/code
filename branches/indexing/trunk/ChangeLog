@@ -1,6 +1,7 @@
 2012-04-12 Jesse Kornblum <research@jessekornblum.com>:
 
 	* Makefile.am: LF to CR/LF change now done by zip program
+	* match.cpp: Fixed bug in Win32 filename construction
 
 2012-04-11 Jesse Kornblum <research@jessekornblum.com>:
 

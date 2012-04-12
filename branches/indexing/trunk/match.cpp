@@ -125,18 +125,18 @@ bool str_to_filedata(state *s, const char * buffer, filedata_t *f)
 #ifndef _WIN32
   f->filename = strdup(tmp.c_str());
   remove_escaped_quotes(f->filename);
-#else
+#else  
   char * tmp2 = strdup(tmp.c_str());
   remove_escaped_quotes(tmp2);
   // On Win32 we have to do a kludgy cast from ordinary char 
   // values to the TCHAR values we use internally. Because we may have
   // reset the string length, get it again.
   size_t i, sz = strlen(tmp2);
-  f->filename = (TCHAR *)malloc(sizeof(char) * sz);
+  f->filename = (TCHAR *)malloc(sizeof(TCHAR) * sz);
   if (NULL == f->filename)
     return true;
   for (i = 0 ; i < sz ; i++)
-    f->filename[i] = (TCHAR)(tmp[i]);
+    f->filename[i] = (TCHAR)(tmp2[i]);
   f->filename[i] = 0;
 #endif
 
