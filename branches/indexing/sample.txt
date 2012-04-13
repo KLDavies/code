@@ -1,7 +1,0 @@
-ssdeep,1.1--blocksize:hash:hash,filename
-192:Q7MlKDcinqD+bCr7QQHo/ijL1WErAnLqTrPr5UZBML9yf+0FVQLSwGQqWwqZQrnx:nI8DTAQIkeqSZQmFX706,"/Users/jessek/research/fuzzy-hashing/ssdeep/trunk/dig.c"
-192:3jECW/C/W/Y/IGGc6JWRWe7pqZIjS2yNZiGtM0OfM7k59N:sLIWk8ZIRyNZiZMs,"/Users/jessek/research/fuzzy-hashing/ssdeep/trunk/edit_dist.c"
-192:JunjQKiVuwVURk0f2Lw0BoJapp6OiAU3jETF5wx4q6ONQ3mhL5:JunjaUwmk0fqfFSGU3IT3p73m,"/Users/jessek/research/fuzzy-hashing/ssdeep/trunk/helpers.c"
-192:9sQsSQSK4l0DUh6XCdDrk0zAyz3/OmCpd+/1OaiqM5W8R3dD5:9suK4lxhtz3/DH903,"/Users/jessek/research/fuzzy-hashing/ssdeep/trunk/main.c"
-192:m/3U6dCOIN5Xz0MST0XmXAQ/zeCV7e+trEG1B57i/VG5K6aWlri+W/doNh5NExD9:m/3Uqo023jL3XEeN/7Q+,"/Users/jessek/research/fuzzy-hashing/ssdeep/trunk/match.c"
-192:m/3UbdCOIN5Xz0MST0XmXaQ/zeCV7e+trEG1B56i/VG5K6aWlri+W/doNh5NExD9:m/3Uqo023jL3XEeN/7Q+,"/Users/jessek/research/fuzzy-hashing/ssdeep/trunk/match.c-FAKE"
