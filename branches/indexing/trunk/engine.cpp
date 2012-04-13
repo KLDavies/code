@@ -5,7 +5,7 @@
 
 #define MAX_STATUS_MSG   78
 
-void display_result(state *s, TCHAR * fn, char * sum)
+void display_result(state *s, const TCHAR * fn, const char * sum)
 {
   if (MODE(mode_match_pretty)) // || MODE(mode_cluster))
   {

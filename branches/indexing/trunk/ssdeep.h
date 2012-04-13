@@ -11,16 +11,6 @@
 
 #include "main.h"
 
-// RBF - Resolve __progname
-#define __progname "ssdeep"
-/*
-#ifdef __GLIBC__
-extern char *__progname;
-#else 
-char *__progname;
-#endif
-*/
-
 #include <string>
 #include <map>
 #include <set>
@@ -29,7 +19,8 @@ char *__progname;
 #include "fuzzy.h"
 #include "tchar-local.h"
 
-#define MM_INIT  printf
+// This is a kludge, but it works.
+#define __progname "ssdeep"
 
 #define SSDEEPV1_0_HEADER        "ssdeep,1.0--blocksize:hash:hash,filename"
 #define SSDEEPV1_1_HEADER        "ssdeep,1.1--blocksize:hash:hash,filename"
@@ -105,6 +96,8 @@ typedef struct {
 
 
 
+#define MM_INIT  printf
+
 // Things required when cross compiling for Microsoft Windows
 #ifdef _WIN32
 
@@ -179,7 +172,7 @@ int process_stdin(state *s);
 // Fuzzy Hashing Engine
 // *********************************************************************
 int hash_file(state *s, TCHAR *fn);
-void display_result(state *s, TCHAR * fn, char * sum);
+void display_result(state *s, const TCHAR * fn, const char * sum);
 
 
 // *********************************************************************
@@ -250,21 +243,21 @@ void display_filename(FILE *out, const TCHAR *fn, int escape_quotes);
 /// @param sum Fuzzy hash of the unknown file we are comparing
 bool match_compare(state *s, 
 		   const char * match_file, 
-		   TCHAR *fn, 
+		   const TCHAR *fn, 
 		   const char *sum);
 
 // Load a file of known hashes
 bool match_load(state *s, char *fn);
 
 // Add a single new hash to the set of known hashes
-bool match_add(state *s, char * match_file, TCHAR *fn, char *hash);
+bool match_add(state *s, const char * match_file, const TCHAR *fn, const char *hash);
 
 // Display all matches in the set of known hashes nicely
 bool match_pretty(state *s);
 
 // Load the known hashes from the file fn and compare them to the
 // set of known hashes
-bool match_compare_unknown(state *s, char * fn);
+bool match_compare_unknown(state *s, const char * fn);
 
 // Display the results of clustering operations
 int display_clusters(state *s);

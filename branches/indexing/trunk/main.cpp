@@ -133,7 +133,7 @@ static void process_cmd_line(state *s, int argc, char **argv)
       if (MODE(mode_compare_unknown) || MODE(mode_sigcompare))
 	fatal_error("Positive matching cannot be combined with other matching modes");
       s->mode |= mode_match;
-      if (!match_load(s,optarg))
+      if (not match_load(s,optarg))
 	match_files_loaded = TRUE;
       break;
       
@@ -141,7 +141,7 @@ static void process_cmd_line(state *s, int argc, char **argv)
       if (MODE(mode_match) || MODE(mode_sigcompare))
 	fatal_error("Signature matching cannot be combined with other matching modes");
       s->mode |= mode_compare_unknown;
-      if (!match_load(s,optarg))
+      if (not match_load(s,optarg))
 	match_files_loaded = TRUE;
       break;
 
@@ -164,7 +164,7 @@ static void process_cmd_line(state *s, int argc, char **argv)
   // the command line arguments.
   sanity_check(s,
 	       ((MODE(mode_match) || MODE(mode_compare_unknown))
-		&& !match_files_loaded),
+		&& not match_files_loaded),
 	       "No matching files loaded");
   
   sanity_check(s,
@@ -291,7 +291,7 @@ int main(int argc, char **argv)
     // on it on Win32 (i.e. where it matters). The setting of 'goal'
     // to the original argc occured at the start of main(), so we just
     // need to update it if we're *not* in signature compare mode.
-    if (!(s->mode & mode_sigcompare))
+    if (not (s->mode & mode_sigcompare))
     {
       goal = s->argc;
     }
@@ -320,7 +320,7 @@ int main(int argc, char **argv)
     // to be meaningful, we should display a warning message to the user.
     // This happens mostly when people are testing very small files
     // e.g. $ echo "hello world" > foo && ssdeep foo
-    if ( ! s->found_meaningful_file && s->processed_file)
+    if ( not s->found_meaningful_file && s->processed_file)
     {
       print_error(s,"%s: Did not process files large enough to produce meaningful results", __progname);
     }

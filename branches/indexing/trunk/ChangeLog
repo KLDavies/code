@@ -4,6 +4,7 @@
 	* ssdeep.h: Adding Doxygen comments
 	* match.cpp: Fixed bug in Win32 filename construction
 	* fuzzy.h: Cleanup and commenting
+	* engine.cpp: Added const definitions
 
 2012-04-11 Jesse Kornblum <research@jessekornblum.com>:
 

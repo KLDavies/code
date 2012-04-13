@@ -37,7 +37,7 @@
 /// @return On success, returns the open file handle. On failure, returns NULL.
 FILE * sig_file_open(state *s, const char * fn)
 {
-  if (NULL == s || NULL == fn)
+  if (NULL == s or NULL == fn)
     return NULL;
 
   FILE * handle = fopen(fn,"rb");
@@ -153,9 +153,9 @@ bool str_to_filedata(state *s, const char * buffer, filedata_t *f)
 /// @param f Structure where to store the data we read
 ///
 /// @return Returns true if there is no entry to read or on error. Otherwise, false.
-bool sig_file_next(state *s, FILE * handle, char * fn, filedata_t * f)
+bool sig_file_next(state *s, FILE * handle, const char * fn, filedata_t * f)
 {
-  if (NULL == s || NULL == fn || NULL == f || NULL == handle)
+  if (NULL == s or NULL == fn or NULL == f or NULL == handle)
     return true;
 
   char buffer[MAX_STR_LEN];
@@ -218,10 +218,10 @@ void handle_match(state *s,
 
 bool match_compare(state *s, 
 		   const char * match_file, 
-		   TCHAR *fn, 
+		   const TCHAR *fn, 
 		   const char *sum)
 {
-  if (NULL == s || NULL == fn || NULL == sum)
+  if (NULL == s or NULL == fn or NULL == sum)
     fatal_error("%s: Null values passed into match_compare", __progname);
 
   bool status = false;
@@ -430,7 +430,10 @@ bool add_known_file(state *s, filedata_t *f)
 }
 
 
-bool match_add(state *s, char * match_file, TCHAR *fn, char *hash)
+bool match_add(state *s, 
+	       const char  * match_file, 
+	       const TCHAR * fn, 
+	       const char  * hash)
 {
   filedata_t * f = new filedata_t;
 
@@ -448,7 +451,7 @@ bool match_add(state *s, char * match_file, TCHAR *fn, char *hash)
 
 bool match_load(state *s, char *fn)
 {
-  if (NULL == s || NULL == fn)
+  if (NULL == s or NULL == fn)
     return true;
 
   bool status = false;
@@ -475,9 +478,9 @@ bool match_load(state *s, char *fn)
 }
 
 
-bool match_compare_unknown(state *s, char * fn)
+bool match_compare_unknown(state *s, const char * fn)
 { 
-  if (NULL == s || NULL == fn)
+  if (NULL == s or NULL == fn)
     return true;
 
   FILE * handle = sig_file_open(s,fn);
@@ -487,9 +490,7 @@ bool match_compare_unknown(state *s, char * fn)
   filedata_t f;
   
   while ( ! sig_file_next(s,handle,fn,&f))
-  {
     match_compare(s,fn,f.filename,f.signature.c_str());
-  }
 
   sig_file_close(handle);
 
