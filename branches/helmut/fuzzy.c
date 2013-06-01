@@ -247,6 +247,13 @@ static int memcpy_eliminate_sequences(char *dst,
 extern const int EOVERFLOW;
 #endif
 
+// We need some extra help on Win32
+#ifdef _WIN32
+# define EOVERFLOW 84
+# define ftello    ftell
+# define fseeko    fseek
+#endif
+
 int fuzzy_digest(const struct fuzzy_state *self, /*@out@*/ char *result,
 		 unsigned int flags) {
   unsigned int bi = self->bhstart;
@@ -390,17 +397,20 @@ int fseeko(FILE *, off_t, int);
 off_t ftello(FILE *);
 #endif
 
-int fuzzy_hash_file(FILE *handle, /*@out@*/ char *result) {
-	off_t fpos;
-	int status;
-	fpos = ftello(handle);
-	if(fseek(handle, 0, SEEK_SET) < 0)
-		return -1;
-	status = fuzzy_hash_stream(handle, result);
-	if(status == 0)
-		if(fseeko(handle, fpos, SEEK_SET) < 0)
-			return -1;
-	return status;
+int fuzzy_hash_file(FILE *handle, /*@out@*/ char *result) 
+{
+  off_t fpos;
+  int status;
+  fpos = ftello(handle);
+  if (fseek(handle, 0, SEEK_SET) < 0)
+    return -1;
+  status = fuzzy_hash_stream(handle, result);
+  if (status == 0)
+  {
+    if (fseeko(handle, fpos, SEEK_SET) < 0)
+      return -1;
+  }
+  return status;
 }
 
 int fuzzy_hash_filename(const char *filename, /*@out@*/ char *result) {
