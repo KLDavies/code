@@ -1,6 +1,9 @@
 /*
  * Copyright (C) ManTech International Corporation 2010
+ * Copyright (C) Kyrus 2012
  * Copyright (C) 2013 Helmut Grohne <helmut@subdivi.de>
+ *
+ * $Id$
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +22,36 @@
  * Earlier versions of this code can be found at:
  *     http://ssdeep.sf.net/
  */
+
+/// @mainpage
+/// This is the documentation for the fuzzy hashing API from ssdeep.
+///
+/// There is a complete function reference in fuzzy.h.
+///
+/// The most recent version of this documentation can be found
+/// at http://ssdeep.sourceforge.net/.
+///
+/// @copydoc fuzzy.h
+///
+/// @version 3.0
+/// @date 1 Jun 2013
+///
+/// @author Jesse Kornblum, research@jessekornblum.com
+/// @author Helmut Grohne, helmut@subdivi.de
+///
+/// @file fuzzy.h
+/// @brief
+/// These functions allow a programmer to compute the fuzzy hashes
+/// (also called the context-triggered piecewise hashes) of
+/// @link fuzzy_hash_buf() a buffer
+/// of text @endlink,
+/// @link fuzzy_hash_filename() the contents of a file on the disk @endlink,
+/// and
+/// @link fuzzy_hash_file() the contents of
+/// an open file handle @endlink .
+/// There is also a function to
+/// @link fuzzy_compare() compute the
+/// similarity between any two fuzzy signatures @endlink.
 
 #include <stdint.h>
 #include <stdio.h>
