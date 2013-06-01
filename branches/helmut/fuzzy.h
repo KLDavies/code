@@ -61,8 +61,9 @@ extern /*@only@*/ /*@null@*/ struct fuzzy_state *fuzzy_new(void);
  * @param buffer_size The length of the given buffer
  * @return zero on success, non-zero on error
  */
-extern int fuzzy_update(struct fuzzy_state *state, const unsigned char *buffer,
-		size_t buffer_size);
+extern int fuzzy_update(struct fuzzy_state *state, 
+			const unsigned char *buffer,
+			size_t buffer_size);
 
 /**
  * @brief Obtain the fuzzy hash from the state.
@@ -76,13 +77,14 @@ extern int fuzzy_update(struct fuzzy_state *state, const unsigned char *buffer,
  * @return zero on success, non-zero on error
  */
 extern int fuzzy_digest(const struct fuzzy_state *state,
-		/*@out@*/ char *result, unsigned int flags);
-
+			/*@out@*/ char *result, 
+			unsigned int flags);
+  
 /**
  * @brief Dispose a fuzzy state.
  */
 extern void fuzzy_free(/*@only@*/ struct fuzzy_state *state);
-
+  
 /**
  * @brief Compute the fuzzy hash of a buffer
  *
@@ -95,8 +97,9 @@ extern void fuzzy_free(/*@only@*/ struct fuzzy_state *state);
  * must be allocated to hold at least FUZZY_MAX_RESULT bytes.
  * @return Returns zero on success, non-zero on error.
  */
-extern int fuzzy_hash_buf(const unsigned char *buf, uint32_t buf_len,
-		/*@out@*/ char *result);
+extern int fuzzy_hash_buf(const unsigned char *buf, 
+			  uint32_t buf_len,
+			  /*@out@*/ char *result);
 
 /**
  * @brief Compute the fuzzy hash of a file using an open handle
