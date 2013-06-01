@@ -72,7 +72,8 @@ static void roll_init(/*@out@*/ struct roll_state *self) {
  * h3 is a shift/xor based rolling hash, and is mostly needed to ensure that
  * we can cope with large blocksize values
  */
-static void roll_hash(struct roll_state *self, unsigned char c) {
+static void roll_hash(struct roll_state *self, unsigned char c) 
+{
   self->h2 -= self->h1;
   self->h2 += ROLLING_WINDOW * (uint32_t)c;
   
@@ -95,8 +96,9 @@ static uint32_t roll_sum(const struct roll_state *self)
 }
 
 /* A simple non-rolling hash, based on the FNV hash. */
-static uint32_t sum_hash(unsigned char c, uint32_t h) {
-	return (h * HASH_PRIME) ^ c;
+static uint32_t sum_hash(unsigned char c, uint32_t h) 
+{
+  return (h * HASH_PRIME) ^ c;
 }
 
 /* A blockhash contains a signature state for a specific (implicit) blocksize.
@@ -104,13 +106,15 @@ static uint32_t sum_hash(unsigned char c, uint32_t h) {
  * FNV hashes, where halfh stops to be reset after digest is SPAMSUM_LENGTH/2
  * long. The halfh hash is needed be able to truncate digest for the second
  * output hash to stay compatible with ssdeep output. */
-struct blockhash_context {
+struct blockhash_context 
+{
   uint32_t h, halfh;
   char digest[SPAMSUM_LENGTH];
   unsigned int dlen;
 };
 
-struct fuzzy_state {
+struct fuzzy_state 
+{
   unsigned int bhstart, bhend;
   struct blockhash_context bh[NUM_BLOCKHASHES];
   size_t total_size;
@@ -119,7 +123,8 @@ struct fuzzy_state {
 
 #define SSDEEP_BS(index) (((uint32_t)MIN_BLOCKSIZE) << (index))
 
-/*@only@*/ /*@null@*/ struct fuzzy_state *fuzzy_new(void) {
+/*@only@*/ /*@null@*/ struct fuzzy_state *fuzzy_new(void) 
+{
   struct fuzzy_state *self;
   if(NULL == (self = malloc(sizeof(struct fuzzy_state))))
     /* malloc sets ENOMEM */
@@ -134,39 +139,41 @@ struct fuzzy_state {
   return self;
 }
 
-static void fuzzy_try_fork_blockhash(struct fuzzy_state *self) {
-	struct blockhash_context *obh, *nbh;
-	if(self->bhend >= NUM_BLOCKHASHES)
-		return;
-	assert(self->bhend > 0);
-	obh = self->bh + (self->bhend - 1);
-	nbh = obh + 1;
-	nbh->h = obh->h;
-	nbh->halfh = obh->halfh;
-	nbh->dlen = 0;
-	++self->bhend;
+static void fuzzy_try_fork_blockhash(struct fuzzy_state *self) 
+{
+  struct blockhash_context *obh, *nbh;
+  if (self->bhend >= NUM_BLOCKHASHES)
+    return;
+  assert(self->bhend > 0);
+  obh = self->bh + (self->bhend - 1);
+  nbh = obh + 1;
+  nbh->h = obh->h;
+  nbh->halfh = obh->halfh;
+  nbh->dlen = 0;
+  ++self->bhend;
 }
 
-static void fuzzy_try_reduce_blockhash(struct fuzzy_state *self) {
-	assert(self->bhstart < self->bhend);
-	if(self->bhend - self->bhstart < 2)
-		/* Need at least two working hashes. */
-		return;
-	if((size_t)SSDEEP_BS(self->bhstart) * SPAMSUM_LENGTH >=
-			self->total_size)
-		/* Initial blocksize estimate would select this or a smaller
-		 * blocksize. */
-		return;
-	if(self->bh[self->bhstart + 1].dlen < SPAMSUM_LENGTH / 2)
-		/* Estimate adjustment would select this blocksize. */
-		return;
-	/* At this point we are clearly no longer interested in the
-	 * start_blocksize. Get rid of it. */
-	++self->bhstart;
+static void fuzzy_try_reduce_blockhash(struct fuzzy_state *self) 
+{
+  assert(self->bhstart < self->bhend);
+  if (self->bhend - self->bhstart < 2)
+    /* Need at least two working hashes. */
+    return;
+  if ((size_t)SSDEEP_BS(self->bhstart) * SPAMSUM_LENGTH >=
+      self->total_size)
+    /* Initial blocksize estimate would select this or a smaller
+     * blocksize. */
+    return;
+  if (self->bh[self->bhstart + 1].dlen < SPAMSUM_LENGTH / 2)
+    /* Estimate adjustment would select this blocksize. */
+    return;
+  /* At this point we are clearly no longer interested in the
+   * start_blocksize. Get rid of it. */
+  ++self->bhstart;
 }
 
 static const char *b64 =
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static void fuzzy_engine_step(struct fuzzy_state *self, unsigned char c) 
 {
@@ -178,16 +185,16 @@ static void fuzzy_engine_step(struct fuzzy_state *self, unsigned char c)
   roll_hash(&self->roll, c);
   h = roll_sum(&self->roll);
 
-  for(i = self->bhstart; i < self->bhend; ++i)
+  for (i = self->bhstart; i < self->bhend; ++i)
   {
     self->bh[i].h = sum_hash(c, self->bh[i].h);
     self->bh[i].halfh = sum_hash(c, self->bh[i].halfh);
   }
   
-  for(i = self->bhstart; i < self->bhend; ++i)
+  for (i = self->bhstart; i < self->bhend; ++i)
   {
     /* With growing blocksize almost no runs fail the next test. */
-    if(likely(h % SSDEEP_BS(i) != SSDEEP_BS(i) - 1))
+    if (likely(h % SSDEEP_BS(i) != SSDEEP_BS(i) - 1))
       /* Once this condition is false for one bs, it is
        * automatically false for all further bs. I.e. if
        * h === -1 (mod 2*bs) then h === -1 (mod bs). */
@@ -195,12 +202,12 @@ static void fuzzy_engine_step(struct fuzzy_state *self, unsigned char c)
     /* We have hit a reset point. We now emit hashes which are
      * based on all characters in the piece of the message between
      * the last reset point and this one */
-    if(unlikely(0 == self->bh[i].dlen)) {
+    if (unlikely(0 == self->bh[i].dlen)) {
       /* Can only happen 30 times. */
       /* First step for this blocksize. Clone next. */
       fuzzy_try_fork_blockhash(self);
     }
-    if(self->bh[i].dlen < SPAMSUM_LENGTH - 1) {
+    if (self->bh[i].dlen < SPAMSUM_LENGTH - 1) {
       /* We can have a problem with the tail overflowing. The
        * easiest way to cope with this is to only reset the
        * normal hash if we have room for more characters in
@@ -210,7 +217,7 @@ static void fuzzy_engine_step(struct fuzzy_state *self, unsigned char c)
       self->bh[i].digest[self->bh[i].dlen++] =
 	b64[self->bh[i].h % 64];
       self->bh[i].h = HASH_INIT;
-      if(self->bh[i].dlen < SPAMSUM_LENGTH / 2)
+      if (self->bh[i].dlen < SPAMSUM_LENGTH / 2)
 	self->bh[i].halfh = HASH_INIT;
     } else
       fuzzy_try_reduce_blockhash(self);
@@ -221,21 +228,23 @@ int fuzzy_update(struct fuzzy_state *self,
 		 const unsigned char *buffer,
 		 size_t buffer_size) {
   self->total_size += buffer_size;
-  for( ;buffer_size > 0; ++buffer, --buffer_size)
+  for ( ;buffer_size > 0; ++buffer, --buffer_size)
     fuzzy_engine_step(self, *buffer);
   return 0;
 }
 
 static int memcpy_eliminate_sequences(char *dst, 
 				      const char *src,
-				      int n) {
+				      int n) 
+{
   const char *srcend = src + n;
   assert(n >= 0);
-  if(src < srcend) *dst++ = *src++;
-  if(src < srcend) *dst++ = *src++;
-  if(src < srcend) *dst++ = *src++;
-  while(src < srcend)
-    if(*src == dst[-1] && *src == dst[-2] && *src == dst[-3]) {
+  if (src < srcend) *dst++ = *src++;
+  if (src < srcend) *dst++ = *src++;
+  if (src < srcend) *dst++ = *src++;
+  while (src < srcend)
+    if (*src == dst[-1] && *src == dst[-2] && *src == dst[-3]) 
+    {
       ++src;
       --n;
     } else
@@ -254,8 +263,10 @@ extern const int EOVERFLOW;
 # define fseeko    fseek
 #endif
 
-int fuzzy_digest(const struct fuzzy_state *self, /*@out@*/ char *result,
-		 unsigned int flags) {
+int fuzzy_digest(const struct fuzzy_state *self, 
+		 /*@out@*/ char *result,
+		 unsigned int flags) 
+{
   unsigned int bi = self->bhstart;
   uint32_t h = roll_sum(&self->roll);
   int i, remain = FUZZY_MAX_RESULT - 1; /* Exclude terminating '\0'. */
@@ -264,23 +275,23 @@ int fuzzy_digest(const struct fuzzy_state *self, /*@out@*/ char *result,
 	 self->total_size);
   
   /* Initial blocksize guess. */
-  while((size_t)SSDEEP_BS(bi) * SPAMSUM_LENGTH < self->total_size) {
+  while ((size_t)SSDEEP_BS(bi) * SPAMSUM_LENGTH < self->total_size) {
     ++bi;
-    if(bi >= NUM_BLOCKHASHES) {
+    if (bi >= NUM_BLOCKHASHES) {
       /* The input exceeds data types. */
       errno = EOVERFLOW;
       return -1;
     }
   }
   /* Adapt blocksize guess to actual digest length. */
-  while(bi >= self->bhend)
+  while (bi >= self->bhend)
     --bi;
-  while(bi > self->bhstart && self->bh[bi].dlen < SPAMSUM_LENGTH / 2)
+  while (bi > self->bhstart && self->bh[bi].dlen < SPAMSUM_LENGTH / 2)
     --bi;
-  assert(!(bi > 0 && self->bh[bi].dlen < SPAMSUM_LENGTH / 2));
+  assert (!(bi > 0 && self->bh[bi].dlen < SPAMSUM_LENGTH / 2));
   
   i = snprintf(result, (size_t)remain, "%u:", SSDEEP_BS(bi));
-  if(i <= 0)
+  if (i <= 0)
     /* Maybe snprintf has set errno here? */
     return -1;
   assert(i < remain);
@@ -288,107 +299,116 @@ int fuzzy_digest(const struct fuzzy_state *self, /*@out@*/ char *result,
   result += i;
   i = (int)self->bh[bi].dlen;
   assert(i <= remain);
-  if((flags & FUZZY_FLAG_ELIMSEQ) != 0)
+  if ((flags & FUZZY_FLAG_ELIMSEQ) != 0)
     i = memcpy_eliminate_sequences(result, self->bh[bi].digest, i);
   else
-		memcpy(result, self->bh[bi].digest, (size_t)i);
-	result += i;
-	remain -= i;
-	if(h != 0) {
-		assert(remain > 0);
-		*result = b64[self->bh[bi].h % 64];
-		if((flags & FUZZY_FLAG_ELIMSEQ) == 0 || i < 3 ||
-				*result != result[-1] ||
-				*result != result[-2] ||
-				*result != result[-3]) {
-			++result;
-			--remain;
-		}
-	}
-	assert(remain > 0);
-	*result++ = ':';
+    memcpy(result, self->bh[bi].digest, (size_t)i);
+  result += i;
+  remain -= i;
+  if (h != 0) 
+  {
+    assert(remain > 0);
+    *result = b64[self->bh[bi].h % 64];
+    if((flags & FUZZY_FLAG_ELIMSEQ) == 0 || i < 3 ||
+       *result != result[-1] ||
+       *result != result[-2] ||
+       *result != result[-3]) {
+      ++result;
+      --remain;
+    }
+  }
+  assert(remain > 0);
+  *result++ = ':';
+  --remain;
+  if (bi < self->bhend - 1) 
+  {
+    ++bi;
+    i = (int)self->bh[bi].dlen;
+    if ((flags & FUZZY_FLAG_NOTRUNC) == 0 &&
+	i > SPAMSUM_LENGTH / 2 - 1)
+      i = SPAMSUM_LENGTH / 2 - 1;
+    assert(i <= remain);
+    if ((flags & FUZZY_FLAG_ELIMSEQ) != 0)
+      i = memcpy_eliminate_sequences(result,
+				     self->bh[bi].digest, i);
+    else
+      memcpy(result, self->bh[bi].digest, (size_t)i);
+    result += i;
+    remain -= i;
+    if (h != 0) {
+      assert(remain > 0);
+      h = (flags & FUZZY_FLAG_NOTRUNC) != 0 ? self->bh[bi].h :
+	self->bh[bi].halfh;
+      *result = b64[h % 64];
+      if ((flags & FUZZY_FLAG_ELIMSEQ) == 0 || i < 3 ||
+	  *result != result[-1] ||
+	  *result != result[-2] ||
+	  *result != result[-3]) 
+      {
+	++result;
 	--remain;
-	if(bi < self->bhend - 1) {
-		++bi;
-		i = (int)self->bh[bi].dlen;
-		if((flags & FUZZY_FLAG_NOTRUNC) == 0 &&
-				i > SPAMSUM_LENGTH / 2 - 1)
-			i = SPAMSUM_LENGTH / 2 - 1;
-		assert(i <= remain);
-		if((flags & FUZZY_FLAG_ELIMSEQ) != 0)
-			i = memcpy_eliminate_sequences(result,
-					self->bh[bi].digest, i);
-		else
-			memcpy(result, self->bh[bi].digest, (size_t)i);
-		result += i;
-		remain -= i;
-		if(h != 0) {
-			assert(remain > 0);
-			h = (flags & FUZZY_FLAG_NOTRUNC) != 0 ? self->bh[bi].h :
-				self->bh[bi].halfh;
-			*result = b64[h % 64];
-			if((flags & FUZZY_FLAG_ELIMSEQ) == 0 || i < 3 ||
-					*result != result[-1] ||
-					*result != result[-2] ||
-					*result != result[-3]) {
-				++result;
-				--remain;
-			}
-		}
-	} else if(h != 0) {
-		assert(self->bh[bi].dlen == 0);
-		assert(remain > 0);
-		*result++ = b64[self->bh[bi].h % 64];
-		/* No need to bother with FUZZY_FLAG_ELIMSEQ, because this
-		 * digest has length 1. */
-		--remain;
-	}
-	*result = '\0';
-	return 0;
+      }
+    }
+  } else if (h != 0)
+    {
+      assert(self->bh[bi].dlen == 0);
+      assert(remain > 0);
+      *result++ = b64[self->bh[bi].h % 64];
+      /* No need to bother with FUZZY_FLAG_ELIMSEQ, because this
+       * digest has length 1. */
+      --remain;
+    }
+  *result = '\0';
+  return 0;
 }
 
-void fuzzy_free(/*@only@*/ struct fuzzy_state *self) {
-	free(self);
+void fuzzy_free(/*@only@*/ struct fuzzy_state *self) 
+{
+  free(self);
 }
 
-int fuzzy_hash_buf(const unsigned char *buf, uint32_t buf_len,
-		/*@out@*/ char *result) {
-	struct fuzzy_state *ctx;
-	int ret = -1;
-	if(NULL == (ctx = fuzzy_new()))
-		return -1;
-	if(fuzzy_update(ctx, buf, buf_len) < 0)
-		goto out;
-	if(fuzzy_digest(ctx, result, 0) < 0)
-		goto out;
-	ret = 0;
-out:
-	fuzzy_free(ctx);
-	return ret;
+int fuzzy_hash_buf(const unsigned char *buf, 
+		   uint32_t buf_len,
+		   /*@out@*/ char *result) 
+{
+  struct fuzzy_state *ctx;
+  int ret = -1;
+  if (NULL == (ctx = fuzzy_new()))
+    return -1;
+  if (fuzzy_update(ctx, buf, buf_len) < 0)
+    goto out;
+  if (fuzzy_digest(ctx, result, 0) < 0)
+    goto out;
+  ret = 0;
+ out:
+  fuzzy_free(ctx);
+  return ret;
 }
 
-int fuzzy_hash_stream(FILE *handle, /*@out@*/ char *result) {
-	struct fuzzy_state *ctx;
-	unsigned char buffer[4096];
-	size_t n;
-	int ret = -1;
-	if(NULL == (ctx = fuzzy_new()))
-		return -1;
-	for(;;) {
-		n = fread(buffer, 1, 4096, handle);
-		if(0 == n)
-			break;
-		if(fuzzy_update(ctx, buffer, n) < 0)
-			goto out;
-	}
-	if(ferror(handle) != 0)
-		goto out;
-	if(fuzzy_digest(ctx, result, 0) < 0)
-		goto out;
-	ret = 0;
-out:
-	fuzzy_free(ctx);
-	return ret;
+int fuzzy_hash_stream(FILE *handle, /*@out@*/ char *result) 
+{
+  struct fuzzy_state *ctx;
+  unsigned char buffer[4096];
+  size_t n;
+  int ret = -1;
+  if (NULL == (ctx = fuzzy_new()))
+    return -1;
+  for(;;) 
+  {
+    n = fread(buffer, 1, 4096, handle);
+    if (0 == n)
+      break;
+    if (fuzzy_update(ctx, buffer, n) < 0)
+      goto out;
+  }
+  if (ferror(handle) != 0)
+    goto out;
+  if (fuzzy_digest(ctx, result, 0) < 0)
+    goto out;
+  ret = 0;
+ out:
+  fuzzy_free(ctx);
+  return ret;
 }
 
 #ifdef S_SPLINT_S
@@ -413,15 +433,16 @@ int fuzzy_hash_file(FILE *handle, /*@out@*/ char *result)
   return status;
 }
 
-int fuzzy_hash_filename(const char *filename, /*@out@*/ char *result) {
-	int status;
-	FILE *handle = fopen(filename, "rb");
-	if(NULL == handle)
-		return -1;
-	status = fuzzy_hash_stream(handle, result);
-	/* We cannot do anything about an fclose failure. */
-	(void)fclose(handle);
-	return status;
+int fuzzy_hash_filename(const char *filename, /*@out@*/ char *result) 
+{
+  int status;
+  FILE *handle = fopen(filename, "rb");
+  if (NULL == handle)
+    return -1;
+  status = fuzzy_hash_stream(handle, result);
+  /* We cannot do anything about an fclose failure. */
+  (void)fclose(handle);
+  return status;
 }
 
 //
