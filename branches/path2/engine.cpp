@@ -64,7 +64,8 @@ int hash_file(state *s, TCHAR *fn)
   char *sum;
   TCHAR *my_filename, *msg;
   FILE *handle;
-  
+
+#ifdef WIN32  
   TCHAR expanded_fn[SSDEEP_PATH_MAX];
   if (not expanded_path(fn)) {
     _sntprintf(expanded_fn, 
@@ -74,8 +75,11 @@ int hash_file(state *s, TCHAR *fn)
   } else {
     _tcsncpy(expanded_fn, fn, SSDEEP_PATH_MAX);
   }
-
   handle = _tfopen(expanded_fn, _TEXT("rb"));
+# else
+  handle = fopen(fn, "rb");
+#endif
+
   if (NULL == handle)
   {
     print_error_unicode(s,fn,"%s", strerror(errno));
