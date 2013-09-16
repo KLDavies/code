@@ -74,7 +74,7 @@ typedef struct _filedata_t
 typedef struct _bucket_t
 {
   uint32_t ekey;
-  Filedata * f;
+  Filedata * filedata;
 } bucket_t;
 
 bool operator<(const bucket_t &a, const bucket_t &b);

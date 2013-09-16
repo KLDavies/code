@@ -74,7 +74,7 @@ bool add_single_ngram(state *s, char * ngram, Filedata * f) {
     return true;
 
   b->ekey = ekey;
-  b->f = f;
+  b->filedata = f;
 
   //  printf ("%lu\n", s->known_buckets[address].size());
   s->known_buckets[address].insert(b);
@@ -90,10 +90,9 @@ bool add_ngrams(state *s, const char *sig, Filedata *f) {
   size_t pos, len=strlen(sig) - (MIN_SUBSTR_LEN-1);
   char ngram[MIN_SUBSTR_LEN+1] = {0};
 
-  // Short signatures happen
-  // RBF FIX IT
+  // If we get a short signature, set it to a default ngram:
   if (strlen(sig) < MIN_SUBSTR_LEN) {
-    memset(ngram, 0, MIN_SUBSTR_LEN+1);
+    memset(ngram, 'A', MIN_SUBSTR_LEN+1);
     add_single_ngram(s, ngram, f);
   } else {
     for (pos = 0; pos < len ; ++pos) {
@@ -134,16 +133,14 @@ bool sig_file_open(state *s, const char * fn)
     return true;
 
   s->known_handle = fopen(fn,"rb");
-  if (NULL == s->known_handle)
-  {
+  if (NULL == s->known_handle) {
     if ( ! (MODE(mode_silent)) )
       perror(fn);
     return true;
   }
 
   // The first line of the file should contain a valid ssdeep header.
-  if (NULL == fgets(buffer,MAX_STR_LEN,s->known_handle))
-  {
+  if (NULL == fgets(buffer,MAX_STR_LEN,s->known_handle)) {
     if ( ! (MODE(mode_silent)) )
       perror(fn);
     fclose(s->known_handle);
@@ -153,8 +150,7 @@ bool sig_file_open(state *s, const char * fn)
   chop_line(buffer);
 
   if (strncmp(buffer,SSDEEPV1_0_HEADER,MAX_STR_LEN) and
-      strncmp(buffer,SSDEEPV1_1_HEADER,MAX_STR_LEN))
-  {
+      strncmp(buffer,SSDEEPV1_1_HEADER,MAX_STR_LEN)) {
     if ( ! (MODE(mode_silent)) )
       print_error(s,"%s: Invalid file header.", fn);
     fclose(s->known_handle);
@@ -172,37 +168,33 @@ bool sig_file_open(state *s, const char * fn)
 /// it to a Filedata
 ///
 /// @param s State variable
-/// @param f Structure where to store the data we read
 /// @param fn filename where this entry came from
 ///
-/// @return Returns true if there is no entry to read or on error.
-/// Otherwise, false.
-bool sig_file_next(state *s, Filedata ** f, const char *fn)
-{
-  char buffer[MAX_STR_LEN];
+/// @return Returns a pointer to a valid Filedata object or null on error.
+Filedata * sig_file_next(state *s, const char * fn) {
+  if (NULL == s or NULL == fn)
+    return NULL;
 
-  if (NULL == s or NULL == f or NULL == s->known_handle)
-    return true;
-
-  memset(buffer,0,MAX_STR_LEN);
+  char buffer[MAX_STR_LEN] = {0};
   if (NULL == fgets(buffer, MAX_STR_LEN, s->known_handle))
-    return true;
+    return NULL;
 
   s->line_number++;
   chop_line(buffer);
 
-  *f = new Filedata(NULL, buffer, fn);
+  Filedata *f;
+  try {
+    f = new Filedata(NULL, buffer, fn);
+  } catch (std::bad_alloc) {
+    return NULL;
+  }
 
-  return false;
+  return f;
 }
 
-
-bool sig_file_close(state *s)
-{
+bool sig_file_close(state *s) {
   if (NULL == s)
     return true;
-
-  free(s->known_fn);
 
   if (s->known_handle != NULL)
     return true;
@@ -210,12 +202,12 @@ bool sig_file_close(state *s)
   if (fclose(s->known_handle))
     return true;
 
+  free(s->known_fn);
+
   return false;
 }
 
-
-bool sig_file_end(state *s)
-{
+bool sig_file_end(state *s) {
   return (feof(s->known_handle));
 }
 
@@ -371,8 +363,6 @@ bool match_compare_single_ngram(state *s,
   if (NULL == s or NULL == ngram or NULL == f)
     return true;
 
-  //  std::cout << "LOOKING TO MATCH: " << *f << std::endl;
-
   memcpy(address_str, ngram, 3);
   // RBF - Is this the way to do it?
   memcpy(ekey_str, ngram+3, 4);
@@ -387,15 +377,15 @@ bool match_compare_single_ngram(state *s,
   bool status = false;
 
   for (it = known.begin() ; it != known.end() ; ++it) {
-    if (((*it)->ekey != ekey) or (seen.count((*it)->f)))
+    if (((*it)->ekey != ekey) or (seen.count((*it)->filedata)))
       continue;
 
     // The ekey matches and we haven't seen this before. Let's compare!
     // First, remember that we've made this comparison before.
 
-    seen.insert((*it)->f);
+    seen.insert((*it)->filedata);
 
-    Filedata * current = (*it)->f;
+    Filedata * current = (*it)->filedata;
     size_t fn_len = _tcslen(f->get_filename());
 
     if (s->mode & mode_match_pretty)
@@ -448,10 +438,9 @@ bool match_compare_ngrams(state *s,
   size_t pos, len=strlen(sig) - (MIN_SUBSTR_LEN-1);
   char ngram[MIN_SUBSTR_LEN+1] = {0};
 
-  // Short signatures happen
-  // RBF FIX IT
+  // If we get a short signature, set it to a default ngram:
   if (strlen(sig) < MIN_SUBSTR_LEN) {
-    memset(ngram, 0, MIN_SUBSTR_LEN+1);
+    memset(ngram, 'A', MIN_SUBSTR_LEN+1);
     match_compare_single_ngram(s, seen, ngram, f);
   } else {
     for (pos = 0; pos < len ; ++pos) {
@@ -514,30 +503,16 @@ bool match_add(state *s, Filedata * f) {
 
 
 bool match_load(state *s, const char *fn) {
-  bool status;
-
   if (NULL == s or NULL == fn)
     return true;
 
   if (sig_file_open(s, fn))
     return true;
 
-  // RBF - This should be because we haven't loaded any match files yet...
-  if (not s->match_files_loaded) {
-
-    //    s->known_buckets = (std::set<bucket_t*>*[0])malloc(sizeof(std::set<bucket_t>*) * (2 << 24));
-
-    //(std::set<bucket_t*> *)malloc(
-    //	       sizeof(std::set<bucket_t*> *) * (2<<24));
-  }
-
   do {
-    Filedata * f;
-    status = sig_file_next(s, &f, fn);
-    if (not status)
-    {
-      if (match_add(s, f))
-      {
+    Filedata * f = sig_file_next(s, fn);
+    if (f) {
+      if (match_add(s, f)) {
 	// One bad hash doesn't mean this load was a failure.
 	// We don't change the return status because match_add failed.
 	print_error(s, "%s: unable to insert hash", fn);
@@ -552,21 +527,16 @@ bool match_load(state *s, const char *fn) {
 }
 
 
-bool match_compare_unknown(state *s, const char * fn)
-{
+bool match_compare_unknown(state *s, const char * fn) {
   if (NULL == s or NULL == fn)
     return true;
 
   if (sig_file_open(s,fn))
     return true;
 
-  bool status;
-
-  do
-  {
-    Filedata *f;
-    status = sig_file_next(s, &f, fn);
-    if (not status)
+  do {
+    Filedata *f = sig_file_next(s, fn);
+    if (f)
       match_compare(s, f);
   } while (not sig_file_end(s));
 
