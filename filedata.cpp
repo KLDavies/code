@@ -13,39 +13,6 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-/* RBF - Remove vestigial code
-bool Filedata::valid(void) const
-{
-  // A valid fuzzy hash has the form
-  // [blocksize]:[sig1]:[sig2]
-  // with no filename at the end
-
-  // First find the block size
-  const char * sig = m_signature.c_str();
-  unsigned int block_size;
-  if (-1 == sscanf(sig, "%u:", &block_size))
-    return false;
-
-  // Move past the blocksize
-  sig = strchr(sig,':');
-  if (!sig)
-    return false;
-
-  // Move past the first colon and Look for the second colon
-  ++sig;
-  sig = strchr(sig,':');
-  if (!sig)
-    return false;
-
-  // Finally, a valid signature does *not* have a filename at the end of it
-  sig = strchr(sig,',');
-  if (sig)
-    return false;
-
-  return true;
-}
-*/
-
 Filedata::Filedata(const TCHAR *fn,
 		   const char * sig,
 		   const char * match_file) {
@@ -73,7 +40,6 @@ Filedata::Filedata(const TCHAR *fn,
 
   if (parse_substrings(sig))
     throw std::bad_alloc();
-
 }
 
 bool Filedata::parse_substrings(const char *sig) {
@@ -177,8 +143,7 @@ bool Filedata::parse_substrings(const char *sig) {
 }
 
 
-void Filedata::clear_cluster(void)
-{
+void Filedata::clear_cluster(void) {
   if (NULL == m_cluster)
     return;
 
