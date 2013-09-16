@@ -52,20 +52,13 @@ memset(VAR,0,SIZE * sizeof(TYPE));
 #define file_symlink    7
 #define file_unknown  254
 
-
+/*
 typedef struct _filedata_t
 {
   uint64_t id;
 
   /// Original signature in the form [blocksize]:[sig1]:[sig2]
   std::string signature;
-
-  uint64_t blocksize;
-
-  /// Holds signature equal to blocksize
-  std::string s1;
-  /// Holds signature equal to blocksize * 2
-  std::string s2;
 
   TCHAR * filename;
 
@@ -76,12 +69,23 @@ typedef struct _filedata_t
   std::set<_filedata_t> * cluster;
 
 } filedata_t;
+*/
 
+typedef struct _bucket_t
+{
+  uint32_t ekey;
+  Filedata * f;
+} bucket_t;
+
+bool operator<(const bucket_t &a, const bucket_t &b);
 
 typedef struct {
   uint64_t  mode;
 
   bool       first_file_processed;
+
+  std::set<bucket_t *> known_buckets[2<<24];
+  bool       match_files_loaded;
 
   // Known hashes
   std::vector<Filedata *> all_files;

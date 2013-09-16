@@ -6,15 +6,15 @@
 // $Id$
 //
 // This program is licensed under version 2 of the GNU Public License.
-// See the file COPYING for details. 
+// See the file COPYING for details.
 
 #include "ssdeep.h"
 #include "match.h"
 
-#ifdef _WIN32 
+#ifdef _WIN32
 // This can't go in main.h or we get multiple definitions of it
-// Allows us to open standard input in binary mode by default 
-// See http://gnuwin32.sourceforge.net/compile.html for more 
+// Allows us to open standard input in binary mode by default
+// See http://gnuwin32.sourceforge.net/compile.html for more
 int _CRT_fmode = _O_BINARY;
 #endif
 
@@ -28,6 +28,8 @@ static bool initialize_state(state *s)
   s->first_file_processed  = true;
   s->found_meaningful_file = false;
   s->processed_file        = false;
+  s->match_files_loaded    = false;
+  //  s->known_buckets         = NULL;
 
   s->threshold = 0;
 
@@ -42,7 +44,7 @@ static void usage(void)
   print_status ("%s version %s by Jesse Kornblum", __progname, VERSION);
   print_status ("Copyright (C) 2013 Facebook");
   print_status ("");
-  print_status ("Usage: %s [-m file] [-k file] [-dpgvrsblcxa] [-t val] [-h|-V] [FILES]", 
+  print_status ("Usage: %s [-m file] [-k file] [-dpgvrsblcxa] [-t val] [-h|-V] [FILES]",
 	  __progname);
 
   print_status ("-m - Match FILES against known hashes in file");
@@ -69,11 +71,11 @@ static void usage(void)
 
 static void process_cmd_line(state *s, int argc, char **argv)
 {
-  int i, match_files_loaded = FALSE;
+  int i;
 
   while ((i=getopt(argc,argv,"gavhVpdsblcxt:rm:k:")) != -1) {
     switch(i) {
-      
+
     case 'g':
       s->mode |= mode_cluster;
       break;
@@ -82,24 +84,24 @@ static void process_cmd_line(state *s, int argc, char **argv)
       s->mode |= mode_display_all;
       break;
 
-    case 'v': 
+    case 'v':
       if (MODE(mode_verbose))
       {
 	print_error(s,"%s: Already at maximum verbosity", __progname);
 	print_error(s,
-		    "%s: Error message displayed to user correctly", 
+		    "%s: Error message displayed to user correctly",
 		    __progname);
       }
       else
 	s->mode |= mode_verbose;
       break;
-      
+
     case 'p':
       s->mode |= mode_match_pretty;
       break;
 
     case 'd':
-      s->mode |= mode_directory; 
+      s->mode |= mode_directory;
       break;
 
     case 's':
@@ -126,31 +128,31 @@ static void process_cmd_line(state *s, int argc, char **argv)
 	fatal_error("%s: Illegal threshold", __progname);
       s->mode |= mode_threshold;
       break;
-      
+
     case 'm':
       if (MODE(mode_compare_unknown) || MODE(mode_sigcompare))
 	fatal_error("Positive matching cannot be combined with other matching modes");
       s->mode |= mode_match;
-      if (not match_load(s,optarg))
-	match_files_loaded = TRUE;
+      if (not match_load(s, optarg))
+	s->match_files_loaded = true;
       break;
-      
+
     case 'k':
       if (MODE(mode_match) || MODE(mode_sigcompare))
 	fatal_error("Signature matching cannot be combined with other matching modes");
       s->mode |= mode_compare_unknown;
-      if (not match_load(s,optarg))
-	match_files_loaded = TRUE;
+      if (not match_load(s, optarg))
+	s->match_files_loaded = true;
       break;
 
     case 'h':
-      usage(); 
+      usage();
       exit (EXIT_SUCCESS);
-      
+
     case 'V':
       print_status ("%s", VERSION);
       exit (EXIT_SUCCESS);
-      
+
     default:
       try_msg();
       exit (EXIT_FAILURE);
@@ -158,13 +160,13 @@ static void process_cmd_line(state *s, int argc, char **argv)
   }
 
   // We don't include mode_sigcompare in this list as we haven't loaded
-  // the matching files yet. In that mode the matching files are in fact 
+  // the matching files yet. In that mode the matching files are in fact
   // the command line arguments.
   sanity_check(s,
 	       ((MODE(mode_match) || MODE(mode_compare_unknown))
-		&& not match_files_loaded),
+		&& not s->match_files_loaded),
 	       "No matching files loaded");
-  
+
   sanity_check(s,
 	       ((s->mode & mode_barename) && (s->mode & mode_relative)),
 	       "Relative paths and bare names are mutually exclusive");
@@ -199,7 +201,7 @@ static int prepare_windows_command_line(state *s)
   TCHAR **argv;
 
   argv = CommandLineToArgvW(GetCommandLineW(),&argc);
-  
+
   s->argc = argc;
   s->argv = argv;
 
@@ -212,7 +214,7 @@ static int is_absolute_path(TCHAR *fn)
 {
   if (NULL == fn)
     internal_error("Unknown error in is_absolute_path");
-  
+
 #ifdef _WIN32
   return (isalpha(fn[0]) and _TEXT(':') == fn[1]);
 # else
@@ -234,7 +236,7 @@ static void generate_filename(state *s, TCHAR *fn, TCHAR *cwd, TCHAR *input)
     // they follow. Just use the system command to resolve the paths
 #ifdef _WIN32
     _wfullpath(fn, input, SSDEEP_PATH_MAX);
-#else     
+#else
     if (NULL == cwd)
       // If we can't get the current working directory, we're not
       // going to be able to build the relative path to this file anyway.
@@ -256,7 +258,7 @@ int main(int argc, char **argv)
 #ifndef __GLIBC__
   //  __progname  = basename(argv[0]);
 #endif
-  
+
   s = new state;
   if (initialize_state(s))
     fatal_error("%s: Unable to initialize state variable", __progname);
@@ -273,20 +275,20 @@ int main(int argc, char **argv)
 
   // Anything left on the command line at this point is a file
   // or directory we're supposed to process. If there's nothing
-  // specified, we should tackle standard input 
+  // specified, we should tackle standard input
   if (optind == argc) {
     status = process_stdin(s);
   }
   else {
     MD5DEEP_ALLOC(TCHAR, fn, SSDEEP_PATH_MAX);
     MD5DEEP_ALLOC(TCHAR, cwd, SSDEEP_PATH_MAX);
-    
+
     cwd = _tgetcwd(cwd, SSDEEP_PATH_MAX);
     if (NULL == cwd)
       fatal_error("%s: %s", __progname, strerror(errno));
-  
+
     count = optind;
-  
+
     // The signature comparsion mode needs to use the command line
     // arguments and argument count. We don't do wildcard expansion
     // on it on Win32 (i.e. where it matters). The setting of 'goal'
@@ -295,7 +297,7 @@ int main(int argc, char **argv)
     if (not (s->mode & mode_sigcompare)) {
       goal = s->argc;
     }
-    
+
     while (count < goal)
     {
       if (MODE(mode_sigcompare))
@@ -304,14 +306,14 @@ int main(int argc, char **argv)
 	match_compare_unknown(s,argv[count]);
       else {
 	generate_filename(s, fn, cwd, s->argv[count]);
-	
+
 #ifdef _WIN32
 	status = process_win32(s, fn);
 #else
 	status = process_normal(s, fn);
 #endif
       }
-      
+
       ++count;
     }
 

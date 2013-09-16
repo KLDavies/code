@@ -1,3 +1,8 @@
+2013-09-16: Jesse Kornblum <research@jessekornblum.com>:
+
+	* match.cpp: Rewrote to use n-gram indexing
+	* filedata.cpp: Rewrote to be simpler. Not done yet.
+
 2013-07-16: Jesse Kornblum <research@jessekornblum.com>:
 
 	* fuzzy.c: Fix heap corruption bug #15.

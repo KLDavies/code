@@ -1,4 +1,4 @@
-// $Id$ 
+// $Id$
 
 #include "main.h"
 #include "ssdeep.h"
@@ -14,16 +14,16 @@ bool display_result(state *s, const TCHAR * fn, const char * sum)
   {
     Filedata * f;
 
-    try 
+    try
     {
       f = new Filedata(fn, sum);
-    } 
+    }
     catch (std::bad_alloc)
     {
       fatal_error("%s: Unable to create Filedata object in engine.cpp:display_result()", __progname);
     }
 
-    if (MODE(mode_match_pretty)) 
+    if (MODE(mode_match_pretty))
     {
       if (match_add(s,f))
 	print_error_unicode(s,fn,"Unable to add hash to set of known hashes");
@@ -65,12 +65,12 @@ int hash_file(state *s, TCHAR *fn)
   TCHAR *my_filename, *msg;
   FILE *handle;
 
-#ifdef WIN32  
+#ifdef WIN32
   TCHAR expanded_fn[SSDEEP_PATH_MAX];
   if (not expanded_path(fn)) {
-    _sntprintf(expanded_fn, 
+    _sntprintf(expanded_fn,
 	       SSDEEP_PATH_MAX,
-	       _TEXT("\\\\?\\%s"), 
+	       _TEXT("\\\\?\\%s"),
 	       fn);
   } else {
     _tcsncpy(expanded_fn, fn, SSDEEP_PATH_MAX);
@@ -85,7 +85,7 @@ int hash_file(state *s, TCHAR *fn)
     print_error_unicode(s,fn,"%s", strerror(errno));
     return TRUE;
   }
- 
+
   if ((sum = (char *)malloc(sizeof(char) * FUZZY_MAX_RESULT)) == NULL)
   {
     fclose(handle);
@@ -116,8 +116,8 @@ int hash_file(state *s, TCHAR *fn)
 
     _sntprintf(msg,
 	       MAX_STATUS_MSG-1,
-	       _TEXT("Hashing: %s%s"), 
-	       my_filename, 
+	       _TEXT("Hashing: %s%s"),
+	       my_filename,
 	       _TEXT(BLANK_LINE));
     _ftprintf(stderr,_TEXT("%s\r"), msg);
 
