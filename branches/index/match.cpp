@@ -54,7 +54,7 @@ bool operator<(const bucket_t &a, const bucket_t &b) {
 
 bool add_single_ngram(state *s, char * ngram, Filedata * f) {
   char address_str[5] = {0}, ekey_str[5] = {0};
-  uint32_t address, ekey;
+  uint32_t address = 0, ekey = 0;
   bucket_t * b;
 
   if (NULL == s or NULL == ngram or NULL == f)
@@ -92,7 +92,7 @@ bool add_ngrams(state *s, const char *sig, Filedata *f) {
 
   // If we get a short signature, set it to a default ngram:
   if (strlen(sig) < MIN_SUBSTR_LEN) {
-    memset(ngram, 'A', MIN_SUBSTR_LEN+1);
+    memset(ngram, 'A', MIN_SUBSTR_LEN);
     add_single_ngram(s, ngram, f);
   } else {
     for (pos = 0; pos < len ; ++pos) {
@@ -291,19 +291,19 @@ void handle_clustering(state *s, Filedata *a, Filedata *b)
   // In the easiest case, one of these has a cluster and one doesn't
   if (a_has and not b_has)
   {
-    cluster_add(a,b);
+    cluster_add(a, b);
     return;
   }
   if (b_has and not a_has)
   {
-    cluster_add(b,a);
+    cluster_add(b, a);
     return;
   }
 
   // Combine existing clusters
   if (a_has and b_has)
   {
-    cluster_join(s,a,b);
+    cluster_join(s, a, b);
     return;
   }
 
@@ -325,29 +325,25 @@ void handle_match(state *s,
 		  Filedata *b,
 		  int score)
 {
-  if (s->mode & mode_csv)
-  {
+  if (s->mode & mode_csv) {
     printf("\"");
-    display_filename(stdout,a->get_filename(),TRUE);
+    display_filename(stdout, a->get_filename(), TRUE);
     printf("\",\"");
-    display_filename(stdout,b->get_filename(),TRUE);
+    display_filename(stdout, b->get_filename(), TRUE);
     print_status("\",%u", score);
   }
-  else if (s->mode & mode_cluster)
-  {
-    handle_clustering(s,a,b);
-  }
-  else
-  {
+  else if (s->mode & mode_cluster) {
+    handle_clustering(s, a, b);
+  } else {
     // The match file names may be empty. If so, we don't print them
     // or the colon which separates them from the filename
     if (a->has_match_file())
       printf ("%s:", a->get_match_file());
-    display_filename(stdout,a->get_filename(),FALSE);
+    display_filename(stdout, a->get_filename(), FALSE);
     printf (" matches ");
     if (b->has_match_file())
       printf ("%s:", b->get_match_file());
-    display_filename(stdout,b->get_filename(),FALSE);
+    display_filename(stdout, b->get_filename(), FALSE);
     print_status(" (%u)", score);
   }
 }
@@ -358,7 +354,7 @@ bool match_compare_single_ngram(state *s,
 				Filedata *f) {
 
   char address_str[5] = {0}, ekey_str[5] = {0};
-  uint32_t address, ekey;
+  uint32_t address = 0, ekey = 0;
 
   if (NULL == s or NULL == ngram or NULL == f)
     return true;
@@ -388,20 +384,18 @@ bool match_compare_single_ngram(state *s,
     Filedata * current = (*it)->filedata;
     size_t fn_len = _tcslen(f->get_filename());
 
-    if (s->mode & mode_match_pretty)
-    {
+    if (s->mode & mode_match_pretty) {
       if (!(_tcsncmp(f->get_filename(),
 		     current->get_filename(),
 		     std::max(fn_len, _tcslen(current->get_filename())))) and
-	  (f->get_signature() == current->get_signature()))
-      {
+	  (f->get_signature() == current->get_signature())) {
 	// Unless these results from different matching files (such as
 	// what happens in sigcompare mode). That being said, we have to
 	// be careful to avoid NULL values such as when working in
 	// normal pretty print mode.
 
-	std::cout << *f << std::endl;
-	std::cout << *current << std::endl;
+	//	std::cout << *f << std::endl;
+	//	std::cout << *current << std::endl;
 
 	if (not (f->has_match_file()) or
 	    f->get_match_file() == current->get_match_file())
@@ -413,10 +407,8 @@ bool match_compare_single_ngram(state *s,
 			       current->get_signature());
     if (-1 == score)
       print_error(s, "%s: Bad hashes in comparison", __progname);
-    else
-    {
-      if (score > s->threshold or MODE(mode_display_all))
-      {
+    else {
+      if (score > s->threshold or MODE(mode_display_all)) {
 	handle_match(s, f, current, score);
 	status = true;
       }
@@ -437,22 +429,27 @@ bool match_compare_ngrams(state *s,
 
   size_t pos, len=strlen(sig) - (MIN_SUBSTR_LEN-1);
   char ngram[MIN_SUBSTR_LEN+1] = {0};
+  bool status = false;
 
   // If we get a short signature, set it to a default ngram:
+  // RBF - When this happens, can we just stop now? Do these
+  // RBF - signatures EVER match?
   if (strlen(sig) < MIN_SUBSTR_LEN) {
-    memset(ngram, 'A', MIN_SUBSTR_LEN+1);
-    match_compare_single_ngram(s, seen, ngram, f);
+    memset(ngram, 'A', MIN_SUBSTR_LEN);
+    if (match_compare_single_ngram(s, seen, ngram, f))
+      status = true;
   } else {
     for (pos = 0; pos < len ; ++pos) {
       memcpy(ngram, sig + pos, MIN_SUBSTR_LEN);
-      match_compare_single_ngram(s, seen, ngram, f);
+      if (match_compare_single_ngram(s, seen, ngram, f))
+	status = true;
     }
   }
 
-  return false;
+  return status;
 }
 
-bool match_compare(state *s, Filedata * f)
+bool match_compare(state *s, Filedata *f)
 {
   if (NULL == s or NULL == f)
     fatal_error("%s: Null state passed into match_compare", __progname);

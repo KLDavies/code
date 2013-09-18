@@ -20,9 +20,9 @@ Filedata::Filedata(const TCHAR *fn,
   if (NULL == sig)
     throw std::bad_alloc();
 
-  // We don't test fn as it may be NULL, such as when reading in lines
-  // from a signature file. In that case we get the filename from
-  // the signature itself.
+  // We don't throw an error if fn is NULL. When reading a file of known
+  // hashes from the disk, for example, we expect it to be NULL. In that
+  // case we'll just get the filename from the signature in parse_substrings().
   if (fn)
     m_filename = _tcsdup(fn);
   else
@@ -68,7 +68,7 @@ bool Filedata::parse_substrings(const char *sig) {
   m_sig1 = (char *)malloc(1 + (len * sizeof(char)));
   if (NULL == m_sig1)
     return true;
-
+  memset(m_sig1, 0, len + 1);
   strncpy(m_sig1, sig1, len);
 
   // Move past the colon
@@ -85,6 +85,7 @@ bool Filedata::parse_substrings(const char *sig) {
   m_sig2 = (char *)malloc(1 + (len * sizeof(char)));
   if (NULL == m_sig2)
     return true;
+  memset(m_sig2, 0, len + 1);
   strncpy(m_sig2, sig2, len);
 
   // If we have a filename already, we don't need one now
@@ -106,12 +107,14 @@ bool Filedata::parse_substrings(const char *sig) {
   if (stop != filename + strlen(filename) - 1)
     return true;
 
-  char * tmp = (char *)malloc((strlen(filename) + 1) * sizeof(char));
+  len = stop - filename;
+  char * tmp = (char *)malloc((len * sizeof(char)) + 1);
   if (NULL == tmp)
     return true;
+  memset(tmp, 0, len+1);
 
   // Don't copy over the last quoation mark.
-  strncpy(tmp, filename, strlen(filename) - 1);
+  strncpy(tmp, filename, len);
 
   // RBF - Unescape quotation marks in the filename
   // We must look for ESCAPED quotes \"
@@ -119,7 +122,7 @@ bool Filedata::parse_substrings(const char *sig) {
   // memmove(tmp + stop, m_filename
 
 #ifdef _WIN32
-  // RBF - MODIFY THIS CODE
+  // RBF - VERIFY THIS CODE STILL WORKS
 
   // On Win32 we have to do a kludgy cast from ordinary char
   // values to the TCHAR values we use internally. Because we may have
