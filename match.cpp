@@ -76,9 +76,7 @@ bool add_single_ngram(state *s, char * ngram, Filedata * f) {
   b->ekey = ekey;
   b->filedata = f;
 
-  //  printf ("%lu\n", s->known_buckets[address].size());
   s->known_buckets[address].insert(b);
-  //  printf ("%lu\n", s->known_buckets[address].size());
 
   return false;
 }
@@ -362,11 +360,11 @@ bool match_compare_single_ngram(state *s,
   memcpy(address_str, ngram, 3);
   // RBF - Is this the way to do it?
   memcpy(ekey_str, ngram+3, 4);
-  //  printf ("%s -> %s:%s\n", ngram, address_str, ekey_str);
+  //printf ("%s -> %s:%s\n", ngram, address_str, ekey_str);
 
   address = base64_decode(address_str,3);
   ekey = base64_decode(ekey_str, 4);
-  //  printf ("Address: 0x%"PRIx32"   ekey: 0x%"PRIx32"\n", address, ekey);
+  //printf ("Address: 0x%"PRIx32"   ekey: 0x%"PRIx32"\n", address, ekey);
 
   std::set<bucket_t *> known = s->known_buckets[address];
   std::set<bucket_t *>::const_iterator it;
@@ -435,7 +433,6 @@ bool match_compare_ngrams(state *s,
   // RBF - When this happens, can we just stop now? Do these
   // RBF - signatures EVER match?
   if (strlen(sig) < MIN_SUBSTR_LEN) {
-    memset(ngram, 'A', MIN_SUBSTR_LEN);
     if (match_compare_single_ngram(s, seen, ngram, f))
       status = true;
   } else {
@@ -460,7 +457,7 @@ bool match_compare(state *s, Filedata *f)
   std::set<Filedata *> seen;
   if (match_compare_ngrams(s, seen, f->get_sig1(), f))
     status = true;
-  if (match_compare_ngrams(s, seen, f->get_sig1(), f))
+  if (match_compare_ngrams(s, seen, f->get_sig2(), f))
     status = true;
 
   return status;
