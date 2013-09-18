@@ -36,13 +36,11 @@ class Filedata
   const char * get_sig2(void) const { return m_sig2; }
 
   /// Returns the file's name
-  /// RBF - Should this be a std::wstring?
   const TCHAR * get_filename(void) const { return m_filename; }
 
   /// Returns true if this file came from a file of known files on the disk
   bool has_match_file(void) const { return m_has_match_file; }
   /// Returns the name of the file on the disk from which this file came
-  /// RBF - Should this be a std::wstring?
   const char * get_match_file(void) const { return m_match_file; }
 
   /// Returns true if this file belongs to a cluster of similar files
@@ -63,7 +61,6 @@ class Filedata
 
   bool parse_substrings(const char * sig);
 
-  /// RBF - Should this be a std::wstring?
   TCHAR * m_filename;
 
   /// File of hashes where we got this known file from, if any
@@ -77,8 +74,5 @@ class Filedata
 
 /// Display [blocksize]:[sig1]:[sig2],"filename"
 std::ostream& operator<<(std::ostream& o, const Filedata& f);
-
-/// RBF - We can use this IF AND ONLY IF get_filename() returns a std::wstring
-//bool operator==(const Filedata& a, const Filedata& b);
 
 #endif  // ifndef __FILEDATA_H

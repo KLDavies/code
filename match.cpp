@@ -35,7 +35,7 @@ uint32_t base64_decode(char *address, size_t len)
   uint8_t data[4] = {0}, b[4] = {0};
   size_t pos;
 
-  // RBF - There has to be a faster way to do this, but this works.
+  // RBF - There has to be a faster way to do this, but this works for now.
   for (pos = 0 ; pos < len ; ++pos)
     b[pos] = base64_chars.find(address[pos]);
 
@@ -60,12 +60,11 @@ bool add_single_ngram(state *s, char * ngram, Filedata * f) {
   if (NULL == s or NULL == ngram or NULL == f)
     return true;
 
-  memcpy(address_str, ngram, 3);
-  // RBF - Is this the way to do it?
-  memcpy(ekey_str, ngram+3, 4);
+  memcpy(address_str, ngram,     3);
+  memcpy(ekey_str,    ngram + 3, 4);
   //  printf ("%s -> %s:%s\n", ngram, address_str, ekey_str);
 
-  address = base64_decode(address_str,3);
+  address = base64_decode(address_str, 3);
   ekey = base64_decode(ekey_str, 4);
   //  printf ("Address: 0x%"PRIx32"   ekey: 0x%"PRIx32"\n", address, ekey);
 
@@ -357,12 +356,11 @@ bool match_compare_single_ngram(state *s,
   if (NULL == s or NULL == ngram or NULL == f)
     return true;
 
-  memcpy(address_str, ngram, 3);
-  // RBF - Is this the way to do it?
-  memcpy(ekey_str, ngram+3, 4);
+  memcpy(address_str, ngram,     3);
+  memcpy(ekey_str,    ngram + 3, 4);
   //printf ("%s -> %s:%s\n", ngram, address_str, ekey_str);
 
-  address = base64_decode(address_str,3);
+  address = base64_decode(address_str, 3);
   ekey = base64_decode(ekey_str, 4);
   //printf ("Address: 0x%"PRIx32"   ekey: 0x%"PRIx32"\n", address, ekey);
 
