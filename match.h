@@ -17,7 +17,7 @@
 /// @return Returns false if there are no matches, true if at least one match
 /// @param s State variable
 /// @param f Filedata structure for the file.
-bool match_compare(state *s, Filedata * f);
+bool match_compare(state *s, Filedata *f);
 
 /// @brief Load a file of known hashes
 ///
