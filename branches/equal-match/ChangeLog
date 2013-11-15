@@ -1,3 +1,7 @@
+2013-11-15: Jesse Kornblum <research@jessekornblum.com>:
+
+	* fuzzy.c: Declare signatures which are equal as matching 100%
+
 2013-09-21: Jesse Kornblum <research@jessekornblum.com>:
 
 	* fuzzy.c, fuzzy.h: Added fuzzy_clone function
