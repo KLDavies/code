@@ -1,3 +1,8 @@
+2014-11-07: Tsukasa <li@livegrid.org>:
+
+	* edit_dist.c: Made code more portable
+	* fuzzy.c: Multiple bug fixes
+
 2014-10-24: Jesse Kornblum <research@jessekornblum.com>:
 
 	* Makefile.am: Adding edit_dist.h
