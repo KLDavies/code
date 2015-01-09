@@ -80,10 +80,12 @@ static void roll_hash(struct roll_state *self, unsigned char c)
   self->h2 += ROLLING_WINDOW * (uint32_t)c;
 
   self->h1 += (uint32_t)c;
-  self->h1 -= (uint32_t)self->window[self->n % ROLLING_WINDOW];
+  self->h1 -= (uint32_t)self->window[self->n];
 
-  self->window[self->n % ROLLING_WINDOW] = c;
+  self->window[self->n] = c;
   self->n++;
+  if (self->n == ROLLING_WINDOW)
+    self->n = 0;
 
   /* The original spamsum AND'ed this value with 0xFFFFFFFF which
    * in theory should have no effect. This AND has been removed
