@@ -720,7 +720,6 @@ int fuzzy_compare(const char *str1, const char *str2)
     return -1;
   }
 
-  // Chop the first substring. We terminate the first substring
   // Advance the pointer to the start of the second substring.
   s1_2++;
   s2_2++;
