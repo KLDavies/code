@@ -96,6 +96,15 @@ extern /*@only@*/ /*@null@*/ struct fuzzy_state *fuzzy_new(void);
 extern /*@only@*/ /*@null@*/ struct fuzzy_state *fuzzy_clone(const struct fuzzy_state *state);
 
 /**
+ * @brief Set target fixed size
+ *
+ * If we know the file size to compute fuzzy digest, we can boost
+ * computation by restricting range of blocksize.
+ * @return 0 on success or -1 on failure
+ */
+extern int fuzzy_set_fixed_size(struct fuzzy_state *state, uint_least64_t fixed_size);
+
+/**
  * @brief Feed the data contained in the given buffer to the state.
  *
  * When an error occurs, the state is undefined. In that case it must not be

@@ -122,7 +122,8 @@ struct blockhash_context
 struct fuzzy_state
 {
   uint_least64_t total_size;
-  unsigned int bhstart, bhend;
+  uint_least64_t fixed_size;
+  unsigned int bhstart, bhend, bhendlimit;
   unsigned int flags;
   uint32_t lasth;
   struct blockhash_context bh[NUM_BLOCKHASHES];
@@ -131,6 +132,7 @@ struct fuzzy_state
 
 #define FUZZY_STATE_SIZE_CLAMPED   1u
 #define FUZZY_STATE_NEED_LASTHASH  2u
+#define FUZZY_STATE_SIZE_FIXED     4u
 
 #define SSDEEP_BS(index) (((uint32_t)MIN_BLOCKSIZE) << (index))
 #define SSDEEP_TOTAL_SIZE_MAX \
@@ -144,6 +146,7 @@ struct fuzzy_state
     return NULL;
   self->bhstart = 0;
   self->bhend = 1;
+  self->bhendlimit = NUM_BLOCKHASHES - 1;
   self->bh[0].h = HASH_INIT;
   self->bh[0].halfh = HASH_INIT;
   self->bh[0].digest[0] = '\0';
@@ -165,13 +168,34 @@ struct fuzzy_state
   return newstate;
 }
 
+int fuzzy_set_fixed_size(struct fuzzy_state *state, uint_least64_t fixed_size)
+{
+  unsigned int bi = 0;
+  if ((state->flags & FUZZY_STATE_SIZE_FIXED) &&
+      state->fixed_size != fixed_size)
+  {
+    errno = EINVAL;
+    return -1;
+  }
+  state->flags |= FUZZY_STATE_SIZE_FIXED;
+  state->fixed_size = fixed_size;
+  while ((uint_least64_t)SSDEEP_BS(bi) * SPAMSUM_LENGTH < fixed_size)
+  {
+    ++bi;
+    if (bi == NUM_BLOCKHASHES - 1)
+      break;
+  }
+  state->bhendlimit = bi;
+  return 0;
+}
+
 
 static void fuzzy_try_fork_blockhash(struct fuzzy_state *self)
 {
   struct blockhash_context *obh, *nbh;
   assert(self->bhend > 0);
   obh = self->bh + (self->bhend - 1);
-  if (self->bhend < NUM_BLOCKHASHES)
+  if (self->bhend <= self->bhendlimit)
   {
     nbh = obh + 1;
     nbh->h = obh->h;
@@ -181,7 +205,7 @@ static void fuzzy_try_fork_blockhash(struct fuzzy_state *self)
     nbh->dindex = 0;
     ++self->bhend;
   }
-  else if (self->bhend >= NUM_BLOCKHASHES &&
+  else if (self->bhend == NUM_BLOCKHASHES &&
            !(self->flags & FUZZY_STATE_NEED_LASTHASH))
   {
     self->flags |= FUZZY_STATE_NEED_LASTHASH;
@@ -197,7 +221,7 @@ static void fuzzy_try_reduce_blockhash(struct fuzzy_state *self)
     return;
   if (!(self->flags & FUZZY_STATE_SIZE_CLAMPED) &&
       (uint_least64_t)SSDEEP_BS(self->bhstart) * SPAMSUM_LENGTH >=
-      self->total_size)
+      (self->flags & FUZZY_STATE_SIZE_FIXED) ? self->fixed_size : self->total_size)
     /* Initial blocksize estimate would select this or a smaller
      * blocksize. */
     return;
@@ -318,12 +342,18 @@ int fuzzy_digest(const struct fuzzy_state *self,
   assert(bi == 0 || (uint_least64_t)SSDEEP_BS(bi) / 2 * SPAMSUM_LENGTH <
 	 self->total_size);
 
-  /* Initial blocksize guess. */
   if (self->flags & FUZZY_STATE_SIZE_CLAMPED) {
     /* The input exceeds data types. */
     errno = EOVERFLOW;
     return -1;
   }
+  /* Fixed size optimization. */
+  if ((self->flags & FUZZY_STATE_SIZE_FIXED) &&
+      self->fixed_size != self->total_size) {
+    errno = EINVAL;
+    return -1;
+  }
+  /* Initial blocksize guess. */
   while ((uint_least64_t)SSDEEP_BS(bi) * SPAMSUM_LENGTH < self->total_size)
     ++bi;
   /* Adapt blocksize guess to actual digest length. */
