@@ -115,7 +115,7 @@ struct blockhash_context
   uint32_t h, halfh;
   char digest[SPAMSUM_LENGTH];
   char halfdigest;
-  unsigned int dlen;
+  unsigned int dindex;
 };
 
 struct fuzzy_state
@@ -143,7 +143,7 @@ struct fuzzy_state
   self->bh[0].halfh = HASH_INIT;
   self->bh[0].digest[0] = '\0';
   self->bh[0].halfdigest = '\0';
-  self->bh[0].dlen = 0;
+  self->bh[0].dindex = 0;
   self->total_size = 0;
   self->total_size_clamped = 0;
   roll_init(&self->roll);
@@ -173,7 +173,7 @@ static void fuzzy_try_fork_blockhash(struct fuzzy_state *self)
   nbh->halfh = obh->halfh;
   nbh->digest[0] = '\0';
   nbh->halfdigest = '\0';
-  nbh->dlen = 0;
+  nbh->dindex = 0;
   ++self->bhend;
 }
 
@@ -189,7 +189,7 @@ static void fuzzy_try_reduce_blockhash(struct fuzzy_state *self)
     /* Initial blocksize estimate would select this or a smaller
      * blocksize. */
     return;
-  if (self->bh[self->bhstart + 1].dlen < SPAMSUM_LENGTH / 2)
+  if (self->bh[self->bhstart + 1].dindex < SPAMSUM_LENGTH / 2)
     /* Estimate adjustment would select this blocksize. */
     return;
   /* At this point we are clearly no longer interested in the
@@ -227,24 +227,24 @@ static void fuzzy_engine_step(struct fuzzy_state *self, unsigned char c)
     /* We have hit a reset point. We now emit hashes which are
      * based on all characters in the piece of the message between
      * the last reset point and this one */
-    if (unlikely(0 == self->bh[i].dlen)) {
+    if (unlikely(0 == self->bh[i].dindex)) {
       /* Can only happen 30 times. */
       /* First step for this blocksize. Clone next. */
       fuzzy_try_fork_blockhash(self);
     }
-    self->bh[i].digest[self->bh[i].dlen] =
+    self->bh[i].digest[self->bh[i].dindex] =
       b64[self->bh[i].h % 64];
     self->bh[i].halfdigest = b64[self->bh[i].halfh % 64];
-    if (self->bh[i].dlen < SPAMSUM_LENGTH - 1) {
+    if (self->bh[i].dindex < SPAMSUM_LENGTH - 1) {
       /* We can have a problem with the tail overflowing. The
        * easiest way to cope with this is to only reset the
        * normal hash if we have room for more characters in
        * our signature. This has the effect of combining the
        * last few pieces of the message into a single piece
        * */
-      self->bh[i].digest[++(self->bh[i].dlen)] = '\0';
+      self->bh[i].digest[++(self->bh[i].dindex)] = '\0';
       self->bh[i].h = HASH_INIT;
-      if (self->bh[i].dlen < SPAMSUM_LENGTH / 2) {
+      if (self->bh[i].dindex < SPAMSUM_LENGTH / 2) {
 	self->bh[i].halfh = HASH_INIT;
 	self->bh[i].halfdigest = '\0';
       }
@@ -315,9 +315,9 @@ int fuzzy_digest(const struct fuzzy_state *self,
   /* Adapt blocksize guess to actual digest length. */
   if (bi >= self->bhend)
     bi = self->bhend - 1;
-  while (bi > self->bhstart && self->bh[bi].dlen < SPAMSUM_LENGTH / 2)
+  while (bi > self->bhstart && self->bh[bi].dindex < SPAMSUM_LENGTH / 2)
     --bi;
-  assert (!(bi > 0 && self->bh[bi].dlen < SPAMSUM_LENGTH / 2));
+  assert (!(bi > 0 && self->bh[bi].dindex < SPAMSUM_LENGTH / 2));
 
   i = snprintf(result, (size_t)remain, "%lu:", (unsigned long)SSDEEP_BS(bi));
   if (i <= 0)
@@ -326,7 +326,7 @@ int fuzzy_digest(const struct fuzzy_state *self,
   assert(i < remain);
   remain -= i;
   result += i;
-  i = (int)self->bh[bi].dlen;
+  i = (int)self->bh[bi].dindex;
   assert(i <= remain);
   if ((flags & FUZZY_FLAG_ELIMSEQ) != 0)
     i = memcpy_eliminate_sequences(result, self->bh[bi].digest, i);
@@ -345,9 +345,9 @@ int fuzzy_digest(const struct fuzzy_state *self,
       ++result;
       --remain;
     }
-  } else if (self->bh[bi].digest[self->bh[bi].dlen] != '\0') {
+  } else if (self->bh[bi].digest[self->bh[bi].dindex] != '\0') {
     assert(remain > 0);
-    *result = self->bh[bi].digest[self->bh[bi].dlen];
+    *result = self->bh[bi].digest[self->bh[bi].dindex];
     if((flags & FUZZY_FLAG_ELIMSEQ) == 0 || i < 3 ||
        *result != result[-1] ||
        *result != result[-2] ||
@@ -362,7 +362,7 @@ int fuzzy_digest(const struct fuzzy_state *self,
   if (bi < self->bhend - 1)
   {
     ++bi;
-    i = (int)self->bh[bi].dlen;
+    i = (int)self->bh[bi].dindex;
     if ((flags & FUZZY_FLAG_NOTRUNC) == 0 &&
 	i > SPAMSUM_LENGTH / 2 - 1)
       i = SPAMSUM_LENGTH / 2 - 1;
@@ -389,7 +389,7 @@ int fuzzy_digest(const struct fuzzy_state *self,
       }
     } else {
       i = (flags & FUZZY_FLAG_NOTRUNC) != 0 ?
-        self->bh[bi].digest[self->bh[bi].dlen] : self->bh[bi].halfdigest;
+        self->bh[bi].digest[self->bh[bi].dindex] : self->bh[bi].halfdigest;
       if (i != '\0') {
 	assert(remain > 0);
 	*result = i;
@@ -405,7 +405,7 @@ int fuzzy_digest(const struct fuzzy_state *self,
     }
   } else if (h != 0)
     {
-      assert(self->bh[bi].dlen == 0);
+      assert(self->bh[bi].dindex == 0);
       assert(remain > 0);
       *result++ = b64[self->bh[bi].h % 64];
       /* No need to bother with FUZZY_FLAG_ELIMSEQ, because this
