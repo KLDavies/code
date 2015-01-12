@@ -24,6 +24,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -696,8 +697,8 @@ int fuzzy_compare(const char *str1, const char *str2)
   // apples to oranges. This isn't an 'error' per se. We could
   // have two valid signatures, but they can't be compared.
   if (block_size1 != block_size2 &&
-      block_size1 != block_size2*2 &&
-      block_size2 != block_size1*2) {
+      (block_size1 > ULONG_MAX / 2 || block_size1*2 != block_size2) &&
+      (block_size1 % 2 == 1 || block_size1 / 2 != block_size2)) {
     return 0;
   }
 
@@ -772,17 +773,30 @@ int fuzzy_compare(const char *str1, const char *str2)
   // each signature has a string for two block sizes. We now
   // choose how to combine the two block sizes. We checked above
   // that they have at least one block size in common
-  if (block_size1 == block_size2) {
-    uint32_t score1, score2;
-    score1 = score_strings(s1_1, s2_1, block_size1);
-    score2 = score_strings(s1_2, s2_2, block_size1*2);
-    score = MAX(score1, score2);
-  }
-  else if (block_size1 == block_size2*2) {
-    score = score_strings(s1_1, s2_2, block_size1);
+  if (block_size1 <= ULONG_MAX / 2) {
+    if (block_size1 == block_size2) {
+      uint32_t score1, score2;
+      score1 = score_strings(s1_1, s2_1, block_size1);
+      score2 = score_strings(s1_2, s2_2, block_size1*2);
+      score = MAX(score1, score2);
+    }
+    else if (block_size1 * 2 == block_size2) {
+      score = score_strings(s1_2, s2_1, block_size2);
+    }
+    else {
+      score = score_strings(s1_1, s2_2, block_size1);
+    }
   }
   else {
-    score = score_strings(s1_2, s2_1, block_size2);
+    if (block_size1 == block_size2) {
+      score = score_strings(s1_1, s2_1, block_size1);
+    }
+    else if (block_size1 % 2 == 0 && block_size1 / 2 == block_size2) {
+      score = score_strings(s1_1, s2_2, block_size1);
+    }
+    else {
+      score = 0;
+    }
   }
 
   free(s1);
