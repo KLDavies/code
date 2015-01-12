@@ -120,12 +120,16 @@ struct blockhash_context
 
 struct fuzzy_state
 {
-  unsigned int bhstart, bhend;
-  struct blockhash_context bh[NUM_BLOCKHASHES];
   uint_least64_t total_size;
+  unsigned int bhstart, bhend;
+  unsigned int flags;
+  uint32_t lasth;
+  struct blockhash_context bh[NUM_BLOCKHASHES];
   struct roll_state roll;
-  char total_size_clamped;
 };
+
+#define FUZZY_STATE_SIZE_CLAMPED   1u
+#define FUZZY_STATE_NEED_LASTHASH  2u
 
 #define SSDEEP_BS(index) (((uint32_t)MIN_BLOCKSIZE) << (index))
 #define SSDEEP_TOTAL_SIZE_MAX \
@@ -145,7 +149,7 @@ struct fuzzy_state
   self->bh[0].halfdigest = '\0';
   self->bh[0].dindex = 0;
   self->total_size = 0;
-  self->total_size_clamped = 0;
+  self->flags = 0;
   roll_init(&self->roll);
   return self;
 }
@@ -164,17 +168,24 @@ struct fuzzy_state
 static void fuzzy_try_fork_blockhash(struct fuzzy_state *self)
 {
   struct blockhash_context *obh, *nbh;
-  if (self->bhend >= NUM_BLOCKHASHES)
-    return;
   assert(self->bhend > 0);
   obh = self->bh + (self->bhend - 1);
-  nbh = obh + 1;
-  nbh->h = obh->h;
-  nbh->halfh = obh->halfh;
-  nbh->digest[0] = '\0';
-  nbh->halfdigest = '\0';
-  nbh->dindex = 0;
-  ++self->bhend;
+  if (self->bhend < NUM_BLOCKHASHES)
+  {
+    nbh = obh + 1;
+    nbh->h = obh->h;
+    nbh->halfh = obh->halfh;
+    nbh->digest[0] = '\0';
+    nbh->halfdigest = '\0';
+    nbh->dindex = 0;
+    ++self->bhend;
+  }
+  else if (self->bhend >= NUM_BLOCKHASHES &&
+           !(self->flags & FUZZY_STATE_NEED_LASTHASH))
+  {
+    self->flags |= FUZZY_STATE_NEED_LASTHASH;
+    self->lasth = obh->h;
+  }
 }
 
 static void fuzzy_try_reduce_blockhash(struct fuzzy_state *self)
@@ -183,7 +194,7 @@ static void fuzzy_try_reduce_blockhash(struct fuzzy_state *self)
   if (self->bhend - self->bhstart < 2)
     /* Need at least two working hashes. */
     return;
-  if (!self->total_size_clamped &&
+  if (!(self->flags & FUZZY_STATE_SIZE_CLAMPED) &&
       (uint_least64_t)SSDEEP_BS(self->bhstart) * SPAMSUM_LENGTH >=
       self->total_size)
     /* Initial blocksize estimate would select this or a smaller
@@ -215,6 +226,8 @@ static void fuzzy_engine_step(struct fuzzy_state *self, unsigned char c)
     self->bh[i].h = sum_hash(c, self->bh[i].h);
     self->bh[i].halfh = sum_hash(c, self->bh[i].halfh);
   }
+  if (self->flags & FUZZY_STATE_NEED_LASTHASH)
+    self->lasth = sum_hash(c, self->lasth);
 
   for (i = self->bhstart; i < self->bhend; ++i)
   {
@@ -256,11 +269,11 @@ static void fuzzy_engine_step(struct fuzzy_state *self, unsigned char c)
 int fuzzy_update(struct fuzzy_state *self,
 		 const unsigned char *buffer,
 		 size_t buffer_size) {
-  if (!self->total_size_clamped) {
+  if (!(self->flags & FUZZY_STATE_SIZE_CLAMPED)) {
     if (buffer_size > SSDEEP_TOTAL_SIZE_MAX ||
 	SSDEEP_TOTAL_SIZE_MAX - buffer_size < self->total_size ) {
       self->total_size = SSDEEP_TOTAL_SIZE_MAX;
-      self->total_size_clamped = 1;
+      self->flags |= FUZZY_STATE_SIZE_CLAMPED;
     }
     else
       self->total_size += buffer_size;
@@ -305,7 +318,7 @@ int fuzzy_digest(const struct fuzzy_state *self,
 	 self->total_size);
 
   /* Initial blocksize guess. */
-  if (self->total_size_clamped) {
+  if (self->flags & FUZZY_STATE_SIZE_CLAMPED) {
     /* The input exceeds data types. */
     errno = EOVERFLOW;
     return -1;
@@ -405,9 +418,12 @@ int fuzzy_digest(const struct fuzzy_state *self,
     }
   } else if (h != 0)
     {
-      assert(self->bh[bi].dindex == 0);
+      assert(bi == 0 || bi == NUM_BLOCKHASHES - 1);
       assert(remain > 0);
-      *result++ = b64[self->bh[bi].h % 64];
+      if (bi == 0)
+	*result++ = b64[self->bh[bi].h % 64];
+      else
+	*result++ = b64[self->lasth % 64];
       /* No need to bother with FUZZY_FLAG_ELIMSEQ, because this
        * digest has length 1. */
       --remain;
