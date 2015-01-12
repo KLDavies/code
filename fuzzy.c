@@ -22,6 +22,8 @@
  *     http://ssdeep.sf.net/
  */
 
+#include "main.h"
+
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
@@ -39,14 +41,6 @@
 #else
 #define likely(x) x
 #define unlikely(x) x
-#endif
-
-#ifndef MIN
-#define MIN(a,b) ((a)<(b)?(a):(b))
-#endif
-
-#ifndef MAX
-#define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
 
 #define ROLLING_WINDOW 7
