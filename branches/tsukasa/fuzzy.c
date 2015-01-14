@@ -176,9 +176,10 @@ int fuzzy_set_fixed_size(struct fuzzy_state *state, uint_least64_t fixed_size)
   while ((uint_least64_t)SSDEEP_BS(bi) * SPAMSUM_LENGTH < fixed_size)
   {
     ++bi;
-    if (bi == NUM_BLOCKHASHES - 1)
+    if (bi == NUM_BLOCKHASHES - 2)
       break;
   }
+  ++bi;
   state->bhendlimit = bi;
   return 0;
 }
@@ -215,7 +216,7 @@ static void fuzzy_try_reduce_blockhash(struct fuzzy_state *self)
     return;
   if (!(self->flags & FUZZY_STATE_SIZE_CLAMPED) &&
       (uint_least64_t)SSDEEP_BS(self->bhstart) * SPAMSUM_LENGTH >=
-      (self->flags & FUZZY_STATE_SIZE_FIXED) ? self->fixed_size : self->total_size)
+      ((self->flags & FUZZY_STATE_SIZE_FIXED) ? self->fixed_size : self->total_size))
     /* Initial blocksize estimate would select this or a smaller
      * blocksize. */
     return;
