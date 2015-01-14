@@ -481,23 +481,31 @@ int fuzzy_hash_buf(const unsigned char *buf,
   return ret;
 }
 
-int fuzzy_hash_stream(FILE *handle, /*@out@*/ char *result)
+static int fuzzy_update_stream(struct fuzzy_state *state,
+			       FILE *handle)
 {
-  struct fuzzy_state *ctx;
   unsigned char buffer[4096];
   size_t n;
-  int ret = -1;
-  if (NULL == (ctx = fuzzy_new()))
-    return -1;
   for(;;)
   {
     n = fread(buffer, 1, 4096, handle);
     if (0 == n)
       break;
-    if (fuzzy_update(ctx, buffer, n) < 0)
-      goto out;
+    if (fuzzy_update(state, buffer, n) < 0)
+      return -1;
   }
   if (ferror(handle) != 0)
+    return -1;
+  return 0;
+}
+
+int fuzzy_hash_stream(FILE *handle, /*@out@*/ char *result)
+{
+  struct fuzzy_state *ctx;
+  int ret = -1;
+  if (NULL == (ctx = fuzzy_new()))
+    return -1;
+  if (fuzzy_update_stream(ctx, handle) < 0)
     goto out;
   if (fuzzy_digest(ctx, result, 0) < 0)
     goto out;
@@ -515,17 +523,33 @@ off_t ftello(FILE *);
 
 int fuzzy_hash_file(FILE *handle, /*@out@*/ char *result)
 {
-  off_t fpos;
-  int status;
+  off_t fpos, fposend;
+  int status = -1;
+  struct fuzzy_state *ctx;
   fpos = ftello(handle);
-  if (fseek(handle, 0, SEEK_SET) < 0)
+  if (fpos < 0)
     return -1;
-  status = fuzzy_hash_stream(handle, result);
+  if (fseeko(handle, 0, SEEK_END) < 0)
+    return -1;
+  fposend = ftello(handle);
+  if (fposend < 0)
+    return -1;
+  if (fseeko(handle, 0, SEEK_SET) < 0)
+    return -1;
+  if (NULL == (ctx = fuzzy_new()))
+    return -1;
+  if (fuzzy_set_fixed_size(ctx, (uint_least64_t)fposend) < 0)
+    goto out;
+  if (fuzzy_update_stream(ctx, handle) < 0)
+    goto out;
+  status = fuzzy_digest(ctx, result, 0);
+out:
   if (status == 0)
   {
     if (fseeko(handle, fpos, SEEK_SET) < 0)
       return -1;
   }
+  fuzzy_free(ctx);
   return status;
 }
 
