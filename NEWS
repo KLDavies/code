@@ -1,8 +1,14 @@
 ** Version 2.13 - RBF DATE
 
+* New Features
+
+  - Added fuzzy_set_fixed_size function to the API.
+  - Supported files up to 96GiB.
+
 * Bug Fixes
 
-  - RBF DETAILS.
+  - Fixed issue when comparing hashes from relatively simple files.
+  - Fixed portability issues.
 
 
 ** Version 2.12 - 24 Oct 2014
