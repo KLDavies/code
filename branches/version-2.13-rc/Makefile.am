@@ -8,7 +8,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES=libfuzzy.la
 libfuzzy_la_SOURCES=fuzzy.c edit_dist.c find-file-size.c
-libfuzzy_la_LDFLAGS=-no-undefined -version-info 2:0:0
+libfuzzy_la_LDFLAGS=-no-undefined -version-info 3:0:1
 
 include_HEADERS=fuzzy.h edit_dist.h
 
