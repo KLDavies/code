@@ -202,7 +202,7 @@ extern int fuzzy_hash_filename(const char *filename, /*@out@*/ char * result);
 /// Computes the match score between two fuzzy hash signatures.
 /// @return Returns a value from zero to 100 indicating the
 /// match score of the
-/// two signatures. A match score of zero indicates the sigantures
+/// two signatures. A match score of zero indicates the signatures
 /// did not match. When an error occurs, such as if one of the
 /// inputs is NULL, returns -1.
 extern int fuzzy_compare(const char *sig1, const char *sig2);
