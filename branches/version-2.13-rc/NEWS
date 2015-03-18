@@ -3,11 +3,11 @@
 * New Features
 
   - Added fuzzy_set_fixed_size function to the API.
-  - Add support for files up to 96GB.
+  - Add support for files up to 192GB.
 
 * Bug Fixes
 
-  - Fixed issue when comparing hashes from relatively small files.
+  - Fixed issue when comparing hashes from relatively simple files.
   - Fixed portability issues.
 
 
