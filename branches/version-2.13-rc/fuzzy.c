@@ -164,6 +164,11 @@ struct fuzzy_state
 int fuzzy_set_total_input_length(struct fuzzy_state *state, uint_least64_t total_fixed_length)
 {
   unsigned int bi = 0;
+  if (total_fixed_length > SSDEEP_TOTAL_SIZE_MAX)
+  {
+    errno = EOVERFLOW;
+    return -1;
+  }
   if ((state->flags & FUZZY_STATE_SIZE_FIXED) &&
       state->fixed_size != total_fixed_length)
   {
