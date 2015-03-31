@@ -161,18 +161,18 @@ struct fuzzy_state
   return newstate;
 }
 
-int fuzzy_set_fixed_size(struct fuzzy_state *state, uint_least64_t fixed_size)
+int fuzzy_set_total_input_length(struct fuzzy_state *state, uint_least64_t total_fixed_length)
 {
   unsigned int bi = 0;
   if ((state->flags & FUZZY_STATE_SIZE_FIXED) &&
-      state->fixed_size != fixed_size)
+      state->fixed_size != total_fixed_length)
   {
     errno = EINVAL;
     return -1;
   }
   state->flags |= FUZZY_STATE_SIZE_FIXED;
-  state->fixed_size = fixed_size;
-  while ((uint_least64_t)SSDEEP_BS(bi) * SPAMSUM_LENGTH < fixed_size)
+  state->fixed_size = total_fixed_length;
+  while ((uint_least64_t)SSDEEP_BS(bi) * SPAMSUM_LENGTH < total_fixed_length)
   {
     ++bi;
     if (bi == NUM_BLOCKHASHES - 2)
@@ -536,7 +536,7 @@ int fuzzy_hash_file(FILE *handle, /*@out@*/ char *result)
     return -1;
   if (NULL == (ctx = fuzzy_new()))
     return -1;
-  if (fuzzy_set_fixed_size(ctx, (uint_least64_t)fposend) < 0)
+  if (fuzzy_set_total_input_length(ctx, (uint_least64_t)fposend) < 0)
     goto out;
   if (fuzzy_update_stream(ctx, handle) < 0)
     goto out;
