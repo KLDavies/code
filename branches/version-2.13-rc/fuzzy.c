@@ -124,9 +124,8 @@ struct fuzzy_state
   struct roll_state roll;
 };
 
-#define FUZZY_STATE_SIZE_CLAMPED   1u
-#define FUZZY_STATE_NEED_LASTHASH  2u
-#define FUZZY_STATE_SIZE_FIXED     4u
+#define FUZZY_STATE_NEED_LASTHASH  1u
+#define FUZZY_STATE_SIZE_FIXED     2u
 
 #define SSDEEP_BS(index) (((uint32_t)MIN_BLOCKSIZE) << (index))
 #define SSDEEP_TOTAL_SIZE_MAX \
@@ -214,7 +213,7 @@ static void fuzzy_try_reduce_blockhash(struct fuzzy_state *self)
   if (self->bhend - self->bhstart < 2)
     /* Need at least two working hashes. */
     return;
-  if (!(self->flags & FUZZY_STATE_SIZE_CLAMPED) &&
+  if (self->total_size <= SSDEEP_TOTAL_SIZE_MAX &&
       (uint_least64_t)SSDEEP_BS(self->bhstart) * SPAMSUM_LENGTH >=
       ((self->flags & FUZZY_STATE_SIZE_FIXED) ? self->fixed_size : self->total_size))
     /* Initial blocksize estimate would select this or a smaller
@@ -289,11 +288,10 @@ static void fuzzy_engine_step(struct fuzzy_state *self, unsigned char c)
 int fuzzy_update(struct fuzzy_state *self,
 		 const unsigned char *buffer,
 		 size_t buffer_size) {
-  if (!(self->flags & FUZZY_STATE_SIZE_CLAMPED)) {
+  if (self->total_size <= SSDEEP_TOTAL_SIZE_MAX) {
     if (buffer_size > SSDEEP_TOTAL_SIZE_MAX ||
 	SSDEEP_TOTAL_SIZE_MAX - buffer_size < self->total_size ) {
-      self->total_size = SSDEEP_TOTAL_SIZE_MAX;
-      self->flags |= FUZZY_STATE_SIZE_CLAMPED;
+      self->total_size = SSDEEP_TOTAL_SIZE_MAX + 1;
     }
     else
       self->total_size += buffer_size;
@@ -337,7 +335,7 @@ int fuzzy_digest(const struct fuzzy_state *self,
   assert(bi == 0 || (uint_least64_t)SSDEEP_BS(bi) / 2 * SPAMSUM_LENGTH <
 	 self->total_size);
 
-  if (self->flags & FUZZY_STATE_SIZE_CLAMPED) {
+  if (self->total_size > SSDEEP_TOTAL_SIZE_MAX) {
     /* The input exceeds data types. */
     errno = EOVERFLOW;
     return -1;
