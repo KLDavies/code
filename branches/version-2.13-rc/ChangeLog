@@ -1,3 +1,7 @@
+2015-04-01: Tsukasa OI <floss_ssdeep@irq.a4lg.com>:
+
+	* dig.cpp: Support arbitrary length input from the standard input.
+
 2014-11-07: Tsukasa OI <floss_ssdeep@irq.a4lg.com>:
 
 	* edit_dist.c: Made code more portable

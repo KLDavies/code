@@ -4,10 +4,11 @@
 
   - Added fuzzy_set_total_input_length function to the API.
   - Added support for files up to 192GB.
+  - Added support for arbitrary length input from the standard input.
 
 * Bug Fixes
 
-  - Fixed issue when comparing hashes from relatively small files.
+  - Fixed issue when comparing hashes from relatively simple files.
   - Fixed portability issues.
 
 

@@ -1,0 +1,99 @@
+<HTML>
+<BODY>
+<PRE>
+<!-- Manpage converted by man2html 3.0.1 -->
+
+SYNOPSIS
+       ssdeep [-m &lt;file&gt;] [-k &lt;file&gt;] [-vdprgsblcxa] [-t val] [FILES]
+       ssdeep [-V|h]
+
+
+DESCRIPTION
+       Computes a signature based on context triggered piecewise hashes for each input file, also called a fuzzy hash.  If requested, the program matches
+       those signatures against a file of known signatures and reports any possible matches.  It can also examine one or more  files  of  signatures  and
+       find any matches in those files.  Output is written to standard out and errors to standard error.
+
+
+       -m &lt;file&gt;
+              Loads  the  specified  file  of  known hashes to be used for matching. This file must be a previous output of the program. The program then
+              hashes each entry in FILES and compares these signatures to the known signatures.  Any matches which score above  the  threshold  are  dis‐
+              played.  This flag may be used multiple times to load more known signatures.  This flag may not be used with the -k or -x flags.
+
+
+       -k &lt;file&gt;
+              Load  the  specified  file  of  known  hashes to be used for matching. This file must be a previous output of the program. The program then
+              treats each entry in FILES as a set of known hashes as well. The hashes in these FILES are compared to the known  hashes  from  this  file.
+              Matches  which score above the threshold are displayed. Both the file specified here and the input FILES should contain fuzzy hashes.  This
+              flag may be used multiple times to load more known signatures.  This flag may not be used with the -m, -d, or -p flags.
+
+
+       -v     Verbose mode. The name of each file is printed to standard error as it is being hashed.
+
+
+       -d     Computes a signature for each entry in the FILES and compares it to the set of known signatures. Matches which score  above  the  threshold
+              are displayed. The computed signature is then added to the set of known signatures.  This flag may not be used with the -k or -x flags.
+
+
+       -p     Works  like the -d flag, but displays all matches for each file. That is, for two files A and B which match score above the threshold, dis‐
+              plays "A matches B" and "B matches A".  This flag may not be used with the -k or -x flags.
+
+
+       -r     Enables recursive mode. All subdirectories are traversed.  Please note that recursive mode cannot be used to examine all files of  a  given
+              file  extension.  For  example,  invoking the program with -r *.txt will examine all files in directories that end in .txt.  If you want to
+              process all files in a directory tree with the .txt suffix, try using the <B>find(1)</B> command.
+
+
+       -g     Similar files are grouped together into clusters. This can be handy for finding more similar files. That is, if you are searching for  file
+              A, which matches B, anything which matches B will also be included in the cluster.
+
+
+       -s     Silent mode. All error messages are suppressed.
+
+
+       -b     Enables bare mode. Strips any leading directory information from displayed filenames.  This flag may not be used in conjunction with the -l
+              flag.
+
+
+              zero.
+
+
+       -t &lt;val&gt;
+              In any of the matching modes, only display matches when match score is greater than the given value. The default threshold value is zero.
+
+
+       -h     Show a help screen and exit.
+
+
+       -V     Show the version number and exit.
+
+
+
+RETURN VALUE
+       Returns 0 on success, 1 if there is a problem.  Read errors, permission denied, and encountering directories while not in recursive mode are still
+       considered successes. Problems are things like being unable to load the matching file, specifying both bare and relative paths, etc.
+
+
+AUTHOR
+       ssdeep was written by Jesse Kornblum of Facebook,
+       research@jessekornblum.com
+
+
+COPYRIGHT
+       This program is Copyright (C) 2014 Facebook and is licensed under the terms of the General Public License. See the file COPYING for details.
+
+
+SEE ALSO
+       This program is based on SpamSum by Dr. Andrews Tridgell.
+       http://www.samba.org/ftp/unpacked/junkcode/spamsum/
+
+
+
+Facebook                                                        Version 2.13 - 23 Mar 2015                                                      <B>SSDEEP(1)</B>
+</PRE>
+<HR>
+<ADDRESS>
+Man(1) output converted with
+<a href="http://www.oac.uci.edu/indiv/ehood/man2html.html">man2html</a>
+</ADDRESS>
+</BODY>
+</HTML>
