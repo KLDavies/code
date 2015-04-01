@@ -2,8 +2,8 @@
 
 * New Features
 
-  - fuzzy_set_total_input_length function to the API.
-  - Add support for files up to 192GB.
+  - Added fuzzy_set_total_input_length function to the API.
+  - Added support for files up to 192GB.
 
 * Bug Fixes
 
