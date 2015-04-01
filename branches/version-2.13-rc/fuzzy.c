@@ -474,6 +474,8 @@ int fuzzy_hash_buf(const unsigned char *buf,
   int ret = -1;
   if (NULL == (ctx = fuzzy_new()))
     return -1;
+  if (fuzzy_set_total_input_length(ctx, buf_len) < 0)
+    goto out;
   if (fuzzy_update(ctx, buf, buf_len) < 0)
     goto out;
   if (fuzzy_digest(ctx, result, 0) < 0)
