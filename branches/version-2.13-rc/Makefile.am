@@ -25,7 +25,7 @@ dll: $(libfuzzy_la_SOURCES)
 
 CLEANFILES=fuzzy.dll fuzzy.def
 
-EXTRA_DIST=$(man_MANS) config.guess config.sub sample.c FILEFORMAT
+EXTRA_DIST=$(man_MANS) bootstrap sample.c FILEFORMAT m4/README
 
 WINDOWSDOCS=README.TXT API.TXT FILEFORMAT.TXT NEWS.TXT
 
