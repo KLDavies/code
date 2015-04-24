@@ -1,3 +1,7 @@
+2015-04-24: Jesse Kornblum <research@jessekornblum.com>:
+
+	* ssdeep.1, NEWS: Updated release date
+
 2015-04-01: Tsukasa OI <floss_ssdeep@irq.a4lg.com>:
 
 	* dig.cpp: Support arbitrary length input from the standard input.
