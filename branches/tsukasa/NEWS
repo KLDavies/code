@@ -1,9 +1,10 @@
-** Version 2.13 - RBF DATE
+** Version 2.13 - 24 Apr 2015
 
 * New Features
 
-  - Added fuzzy_set_fixed_size function to the API.
-  - Supported files up to 192GiB.
+  - Added fuzzy_set_total_input_length function to the API.
+  - Added support for files up to 192GB.
+  - Added support for arbitrary length input from the standard input.
 
 * Bug Fixes
 
